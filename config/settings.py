@@ -1,0 +1,11 @@
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL")
+LLM_MODEL = os.getenv("LLM_MODEL")
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL")
