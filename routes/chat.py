@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 
-from rag.retriever import retriever
+from rag.retriever import retrieve_with_neighbors
 from rag.chain import generate_answer
 
 chat_bp = Blueprint("chat", __name__)
@@ -13,11 +13,19 @@ def chat():
     if not question: 
         return jsonify({"error": "question is required"}), 400
 
-    documents = retriever.invoke(question)
+    documents = retrieve_with_neighbors(question, neighbor_count=1)
     answer, context = generate_answer(question, documents)
 
     sources = []
     for document in documents: 
         sources.append(document.metadata)
 
-    return jsonify({"question": question, "answer": answer, "context": context, "sources": sources})
+    return jsonify({
+        "question": question, 
+        "answer": answer, 
+        "context": "\n\n".join(
+            document.page_content
+            for document in documents
+        ),
+        "sources": sources
+    })
