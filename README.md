@@ -1,3 +1,11 @@
+# Stack
+
+- Framework: Flask
+- Database: Supabase
+- pgvector
+- LangChain
+- Ollama
+
 # Setup
 
 ## A. Buat database
@@ -20,41 +28,47 @@
 
 ## B. Aktifkan `pgvector`
 
-6. Klik `Database` di sidebar kiri (luar).
+1. Klik `Database` di sidebar kiri (luar).
 
-7. Klik `Extensions` di sidebar kiri (dalam).
+2. Klik `Extensions` di sidebar kiri (dalam).
 
-8. Cari `vector` di kolom `NAME` (paling kiri).
+3. Cari `vector` di kolom `NAME` (paling kiri).
 
-9. Klik switch on di kolom `ENABLED`.
+4. Klik switch on di kolom `ENABLED`.
 
-10. `Enable extension` (tidak ganti schema).
+5. `Enable extension` (tidak ganti schema).
 
 ## C. Copy
 
-11. Klik `Project Overview` di sidebar kiri (luar).
+1. Klik `Project Overview` di sidebar kiri (luar).
 
-12. Di bawah `rag-chatbot`, klik `Copy`.
+2. Di bawah `rag-chatbot`, klik `Copy`.
 
-13. Klik `Project URL` dan `Publishable key`.
+3. Klik `Project URL` dan `Publishable key`.
 
-14. Paste di `.env`.
+4. Paste di `.env`.
 
 ## D. Buat tabel
 
-15. Klik `SQL Editor` di sidebar kiri (luar).
+1. Klik `SQL Editor` di sidebar kiri (luar).
 
-16. Masukkan SQL.
+2. Masukkan SQL.
 
-17. Klik `Save` atau tekan `CTRL + V`.
+3. Klik `Save` atau tekan `CTRL + V`.
 
-18. Klik `Run` atau tekan `CTRL + Enter`.
+4. Klik `Run` atau tekan `CTRL + Enter`.
 
-19. Di sidebar kiri (dalam), klik kanan pada query, klik `Rename query`.
+5. Di sidebar kiri (dalam), klik kanan pada query, klik `Rename query`.
 
-20. Lihat tabel di `Database` di sidebar kiri (luar).
+6. Lihat tabel di `Database` di sidebar kiri (luar).
 
 # Eksekusi
+
+## Buat virtual environment
+
+1. `python -m venv .venv`
+
+2. `pip install -r requirements.txt`
 
 ## Tambahkan dokumen
 
@@ -63,6 +77,8 @@
 2. Masukkan path dokumen ke `ingest.py`.
 
 3. Run command `python ingest.py`.
+
+4. Run `select * from documents;` di SQL Supabase.
 
 ## Run
 
