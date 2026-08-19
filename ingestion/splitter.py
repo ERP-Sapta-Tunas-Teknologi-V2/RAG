@@ -28,8 +28,11 @@ class DoclingStructureAwareChunker:
         blocks = []
 
         for item, level in docling_doc.iterate_items():
-            text = self._extract_item_text(item, docling_doc)
+            label = getattr(getattr(item, "label", None), "value", None)
+            if label == "picture":
+                continue
 
+            text = self._extract_item_text(item, docling_doc)
             if not text or not text.strip():
                 continue
 
@@ -38,8 +41,6 @@ class DoclingStructureAwareChunker:
             for prov in getattr(item, "prov", []) or []:
                 if prov.page_no not in pages:
                     pages.append(prov.page_no)
-
-            label = getattr(getattr(item, "label", None), "value", None)
 
             blocks.append({
                 "text": text.strip(),
