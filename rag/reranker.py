@@ -3,7 +3,7 @@ from config.settings import RERANKER_MODEL
 
 reranker = CrossEncoder(RERANKER_MODEL, max_length=8192)
 
-def rerank(question, documents, top_k=3):
+def rerank(question, documents, top_k=10):
     if not documents:
         return []
 

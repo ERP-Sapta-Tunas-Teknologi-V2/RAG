@@ -7,6 +7,7 @@ chat_bp = Blueprint("chat", __name__)
 
 @chat_bp.route("/chat", methods=["POST"])
 def chat():
+    print("Beginning operation.")
     data = request.get_json()
     question = data.get("question")
 
