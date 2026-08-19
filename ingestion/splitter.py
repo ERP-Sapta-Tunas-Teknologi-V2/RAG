@@ -8,11 +8,27 @@ class DoclingStructureAwareChunker:
         self.tokenizer = AutoTokenizer.from_pretrained(EMBEDDING_MODEL)
         self.max_tokens = max_tokens
 
+    def _extract_item_text(self, item, doc):
+        text = getattr(item, "text", None) or getattr(item, "orig", None)
+
+        if text and text.strip():
+            return text
+
+        if hasattr(item, "export_to_markdown"):
+            try:
+                text = item.export_to_markdown(doc=doc)
+                if text and text.strip():
+                    return text
+            except Exception:
+                pass
+
+        return None
+
     def split_documents(self, docling_doc, source, document_id):
         blocks = []
 
         for item, level in docling_doc.iterate_items():
-            text = getattr(item, "text", None) or getattr(item, "orig", None)
+            text = self._extract_item_text(item, docling_doc)
 
             if not text or not text.strip():
                 continue
@@ -25,24 +41,30 @@ class DoclingStructureAwareChunker:
 
             label = getattr(getattr(item, "label", None), "value", None)
 
-            blocks.append({"text": text.strip(), "label": label, "level": level, "pages": pages})
+            blocks.append({
+                "text": text.strip(),
+                "label": label,
+                "level": level,
+                "pages": pages
+            })
 
         sections = self._build_sections(blocks)
         documents = []
         chunk_index = 0
 
         for section in sections:
-            section_chunks = self._chunk_section(section)
-
-            for chunk in section_chunks:
-                documents.append(Document(page_content=chunk["content"], metadata={
-                    "source": source, 
-                    "document_id": document_id, 
-                    "chunk_index": chunk_index, 
-                    "page": chunk["pages"], 
-                    "section": section["section"], 
-                    "section_title": section["title"]
-                }))
+            for chunk in self._chunk_section(section):
+                documents.append(Document(
+                    page_content=chunk["content"],
+                    metadata={
+                        "source": source,
+                        "document_id": document_id,
+                        "chunk_index": chunk_index,
+                        "page": chunk["pages"],
+                        "section": section["section"],
+                        "section_title": section["title"]
+                    }
+                ))
                 chunk_index += 1
 
         return documents
