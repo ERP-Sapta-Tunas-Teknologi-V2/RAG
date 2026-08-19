@@ -2,15 +2,15 @@
 from pathlib import Path
 
 from ingestion.loader import load_document
-from ingestion.splitter import DoclingHybridChunker
+from ingestion.splitter import DoclingStructureAwareChunker
 from rag.vectorstore import vectorstore
 
-chunker = DoclingHybridChunker(max_tokens=1000)
+chunker = DoclingStructureAwareChunker(max_tokens=1000)
 
 def index_document(file_path: str):
     print(f'Loading "{file_path}"...')
     documents = load_document(file_path)
-    print(f"Loaded document.")
+    print("Loaded document.")
 
     path = Path(file_path)
     source = path.name
