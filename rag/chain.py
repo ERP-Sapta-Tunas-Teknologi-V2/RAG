@@ -8,7 +8,8 @@ prompt = ChatPromptTemplate.from_template("""
 Anda adalah chatbot perusahaan.
 
 Jawablah pertanyaan berdasarkan context yang diberikan.
-Jika informasi tidak terdapat dalam context, jawab: "Informasi tidak ditemukan dalam knowledge base."
+Jika informasi tidak terdapat dalam context, jawab: 
+"Informasi tidak ditemukan dalam knowledge base. Silakan hubungi kontak kami."
 Jangan membuat informasi yang tidak terdapat dalam context.
 
 Context:
