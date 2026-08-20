@@ -3,7 +3,7 @@ from transformers import AutoTokenizer
 
 EMBEDDING_MODEL = "BAAI/bge-m3"
 
-class DoclingStructureAwareChunker:
+class StructureAwareChunker:
     def __init__(self, max_tokens=1000):
         self.tokenizer = AutoTokenizer.from_pretrained(EMBEDDING_MODEL)
         self.max_tokens = max_tokens
