@@ -17,7 +17,7 @@ def index_document(file_path: str):
         print(f"Loading document...")
         documents = load_markdown(markdown)
 
-    elif "documents/datasheet" in file_path:
+    else:
         print(f"Loading document...")
         documents = load_document(file_path)
 
