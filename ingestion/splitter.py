@@ -29,6 +29,8 @@ class StructureAwareChunker:
 
         for item, level in docling_doc.iterate_items():
             label = getattr(getattr(item, "label", None), "value", None)
+            # with open("log/label_askrindo.txt", "a", encoding="utf-8") as f:
+            #     f.write(f"LABEL={label} | TYPE={type(item).__name__} | TEXT={getattr(item, 'text', None)!r}\n\n")
             if label == "picture":
                 continue
 

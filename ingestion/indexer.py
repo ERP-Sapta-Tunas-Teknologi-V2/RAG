@@ -1,6 +1,7 @@
 # Memasukkan dokumen ke Supabase
 from pathlib import Path
 
+from ingestion.cleaner import preprocessing
 from ingestion.loader import load_document
 from ingestion.splitter import StructureAwareChunker
 from rag.vectorstore import vectorstore
@@ -8,8 +9,12 @@ from rag.vectorstore import vectorstore
 chunker = StructureAwareChunker(max_tokens=1000)
 
 def index_document(file_path: str):
-    print(f'Loading "{file_path}"...')
-    documents = load_document(file_path)
+    print(f'Cleaning "{file_path}"...')
+    markdown = preprocessing(file_path)
+    print("Cleaned document.")
+
+    print(f"Loading document...")
+    documents = load_document(markdown)
     print("Loaded document.")
 
     path = Path(file_path)
