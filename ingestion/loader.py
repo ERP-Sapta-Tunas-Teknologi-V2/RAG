@@ -1,13 +1,7 @@
-from pathlib import Path
-from docling.document_converter import DocumentConverter
+from docling.document_converter import DocumentConverter, InputFormat
 
-def load_document(file_path: str):
-    path = Path(file_path)
-
-    if path.suffix.lower() not in {".pdf"}:
-        raise ValueError(f"Unsupported file type: {path.suffix}")
-
+def load_document(markdown):
     converter = DocumentConverter()
-    result = converter.convert(str(path))
+    result = converter.convert_string(markdown, format=InputFormat.MD)
 
     return result.document

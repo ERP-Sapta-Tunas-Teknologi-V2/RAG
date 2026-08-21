@@ -1,14 +1,23 @@
+from pathlib import Path
 import pymupdf4llm
+import re
 
-def convert_to_md(file_path):
-    markdown = pymupdf4llm.to_markdown(file_path)
-    return markdown
+def convert_to_md(path):
+    return pymupdf4llm.to_markdown(path)
 
 def remove_bold(markdown):
-    md_no_bold = markdown.replace("**", "")
-    return md_no_bold
+    return markdown.replace("**", "")
+
+def h1_to_h2(markdown):
+    return re.sub(r"^# (?!#)", "## ", markdown, flags=re.MULTILINE)
 
 def preprocessing(file_path):
-    md = convert_to_md(file_path)
-    md_no_bold = remove_bold(md)
-    return md_no_bold
+    path = Path(file_path)
+    if path.suffix.lower() not in {".pdf"}:
+        raise ValueError(f"Unsupported file type: {path.suffix}")
+
+    md = convert_to_md(path)
+    md = remove_bold(md)
+    md = h1_to_h2(md)
+    
+    return md

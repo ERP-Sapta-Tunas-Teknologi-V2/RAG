@@ -11,6 +11,7 @@ Jawablah pertanyaan berdasarkan context yang diberikan.
 Jika informasi tidak terdapat dalam context, jawab: 
 "Informasi tidak ditemukan dalam knowledge base. Silakan hubungi kontak kami."
 Jangan membuat informasi yang tidak terdapat dalam context.
+Jangan sebut "context".
 
 Context:
 {context}

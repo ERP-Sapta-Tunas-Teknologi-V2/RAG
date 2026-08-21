@@ -9,13 +9,13 @@ from rag.vectorstore import vectorstore
 chunker = StructureAwareChunker(max_tokens=1000)
 
 def index_document(file_path: str):
-    print(f'Cleaning "{file_path}"...')
+    print(f'Cleaning document...')
     markdown = preprocessing(file_path)
-    print("Cleaned document.")
+    print("Cleaned.")
 
     print(f"Loading document...")
     documents = load_document(markdown)
-    print("Loaded document.")
+    print("Loaded.")
 
     path = Path(file_path)
     source = path.name
@@ -27,4 +27,4 @@ def index_document(file_path: str):
 
     print("Adding documents...")
     vectorstore.add_documents(chunks)
-    print("Documents successfully indexed.")
+    print("Documents successfully added.")
