@@ -24,7 +24,45 @@ class StructureAwareChunker:
 
         return None
 
-    def split_documents(self, docling_doc, source, document_id, category, uploaded_at):
+    def split_markdown(self, page_documents, source, document_id, category, uploaded_at):
+        blocks = []
+
+        for page_document in page_documents:
+            page_number = page_document["page"]
+            docling_doc = page_document["document"]
+
+            for item, level in docling_doc.iterate_items():
+                label = getattr(getattr(item, "label", None), "value", None)
+                if label == "picture": continue
+
+                text = self._extract_item_text(item, docling_doc)
+                if not text or not text.strip(): continue
+
+                blocks.append({"text": text.strip(), "label": label, "level": level, "pages": [page_number]})
+
+        sections = self._build_sections(blocks)
+        documents = []
+        chunk_index = 0
+
+        for section in sections:
+            for chunk in self._chunk_section(section):
+                documents.append(Document(
+                    page_content=chunk["content"],
+                    metadata={
+                        "source": source,
+                        "document_id": document_id,
+                        "chunk_index": chunk_index,
+                        "page": chunk["pages"],
+                        "section_title": section["title"],
+                        "category": category,
+                        "uploaded_at": uploaded_at
+                    }
+                ))
+                chunk_index += 1
+
+        return documents
+
+    def split_docling(self, docling_doc, source, document_id, category, uploaded_at):
         blocks = []
 
         for item, level in docling_doc.iterate_items():
@@ -44,12 +82,7 @@ class StructureAwareChunker:
                 if prov.page_no not in pages:
                     pages.append(prov.page_no)
 
-            blocks.append({
-                "text": text.strip(),
-                "label": label,
-                "level": level,
-                "pages": pages
-            })
+            blocks.append({"text": text.strip(), "label": label, "level": level, "pages": pages})
 
         sections = self._build_sections(blocks)
         documents = []
@@ -64,7 +97,6 @@ class StructureAwareChunker:
                         "document_id": document_id,
                         "chunk_index": chunk_index,
                         "page": chunk["pages"],
-                        "section": section["section"],
                         "section_title": section["title"],
                         "category": category,
                         "uploaded_at": uploaded_at
@@ -183,7 +215,7 @@ class StructureAwareChunker:
             content = f"{heading}\n\n{content}"
 
         content_tokens = len(self.tokenizer.encode(content, add_special_tokens=False))
-        print(f"CHUNK | tokens={content_tokens} | chars={len(content)} | heading={heading!r}")
+        # print(f"CHUNK | tokens={content_tokens} | chars={len(content)} | heading={heading!r}")
 
         pages = []
 

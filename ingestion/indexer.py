@@ -11,6 +11,7 @@ chunker = StructureAwareChunker(max_tokens=1000)
 
 def index_document(file_path: str):
     path = Path(file_path)
+
     category = path.parent.name
     source = path.name
     document_id = path.stem
@@ -23,15 +24,20 @@ def index_document(file_path: str):
 
         print(f"Loading document...")
         documents = load_markdown(markdown)
+        print("Loaded.")
+
+        print("Creating chunks...")
+        chunks = chunker.split_markdown(documents, source, document_id, category, uploaded_at)
+        print(f"Created {len(chunks)} chunks.")
 
     else:
         print(f"Loading document...")
         documents = load_document(file_path)
-    print("Loaded.")
+        print("Loaded.")
 
-    print("Creating chunks...")
-    chunks = chunker.split_documents(documents, source, document_id, category, uploaded_at)
-    print(f"Created {len(chunks)} chunks.")
+        print("Creating chunks...")
+        chunks = chunker.split_docling(documents, source, document_id, category, uploaded_at)
+        print(f"Created {len(chunks)} chunks.")
 
     print("Adding documents...")
     vectorstore.add_documents(chunks)
