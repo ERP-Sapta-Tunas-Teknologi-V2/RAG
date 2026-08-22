@@ -3,6 +3,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+FILE_TO_INGEST = os.getenv("FILE_TO_INGEST")
+
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
@@ -11,3 +13,6 @@ LLM_MODEL = os.getenv("LLM_MODEL")
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL")
 
 RERANKER_MODEL = os.getenv("RERANKER_MODEL")
+
+VOYAGE_KEY = os.getenv("VOYAGE_KEY")
+VOYAGE_EMB_MODEL = os.getenv("VOYAGE_EMB_MODEL")
