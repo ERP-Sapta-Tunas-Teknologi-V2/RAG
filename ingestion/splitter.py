@@ -24,7 +24,7 @@ class StructureAwareChunker:
 
         return None
 
-    def split_documents(self, docling_doc, source, document_id):
+    def split_documents(self, docling_doc, source, document_id, category, uploaded_at):
         blocks = []
 
         for item, level in docling_doc.iterate_items():
@@ -65,7 +65,9 @@ class StructureAwareChunker:
                         "chunk_index": chunk_index,
                         "page": chunk["pages"],
                         "section": section["section"],
-                        "section_title": section["title"]
+                        "section_title": section["title"],
+                        "category": category,
+                        "uploaded_at": uploaded_at
                     }
                 ))
                 chunk_index += 1

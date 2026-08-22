@@ -1,6 +1,6 @@
 .env
 *.pyc
-*.pdf
 *.ipynb
 /log
 /markdown
+/documents

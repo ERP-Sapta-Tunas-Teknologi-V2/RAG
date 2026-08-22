@@ -1,5 +1,6 @@
 # Memasukkan dokumen ke Supabase
 from pathlib import Path
+from datetime import datetime
 
 from ingestion.cleaner import preprocessing
 from ingestion.loader import load_markdown, load_document
@@ -9,7 +10,13 @@ from rag.vectorstore import vectorstore
 chunker = StructureAwareChunker(max_tokens=1000)
 
 def index_document(file_path: str):
-    if "documents/sop" in file_path:
+    path = Path(file_path)
+    category = path.parent.name
+    source = path.name
+    document_id = path.stem
+    uploaded_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    if category == "sop":
         print(f'Cleaning document...')
         markdown = preprocessing(file_path)
         print("Cleaned.")
@@ -20,15 +27,10 @@ def index_document(file_path: str):
     else:
         print(f"Loading document...")
         documents = load_document(file_path)
-
     print("Loaded.")
 
-    path = Path(file_path)
-    source = path.name
-    document_id = path.stem
-
     print("Creating chunks...")
-    chunks = chunker.split_documents(documents, source=source, document_id=document_id)
+    chunks = chunker.split_documents(documents, source, document_id, category, uploaded_at)
     print(f"Created {len(chunks)} chunks.")
 
     print("Adding documents...")
