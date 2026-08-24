@@ -2,8 +2,10 @@ import time
 import voyageai
 from transformers import AutoTokenizer
 from supabase.client import create_client
+from langchain_voyageai import VoyageAIEmbeddings
+from langchain_ollama import OllamaEmbeddings
 
-from config.settings import SUPABASE_URL, SUPABASE_KEY, VOYAGE_EMB_MODEL
+from config.settings import SUPABASE_URL, SUPABASE_KEY, VOYAGE_EMB_MODEL, EMBEDDING_MODEL
 from rag.embeddings import embeddings
 
 supabase_client = create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -13,7 +15,11 @@ MAX_TPM = 10_000
 TARGET_BATCH_TOKENS = 9_000
 MAX_RETRIES = 3
 
-tokenizer = AutoTokenizer.from_pretrained(f"voyageai/{VOYAGE_EMB_MODEL}")
+USE_VOYAGE = isinstance(embeddings, VoyageAIEmbeddings)
+
+tokenizer = AutoTokenizer.from_pretrained(
+    f"voyageai/{VOYAGE_EMB_MODEL}" if USE_VOYAGE else "BAAI/bge-m3"
+)
 
 def _count_tokens(text):
     return len(tokenizer.encode(text, add_special_tokens=False))
@@ -88,36 +94,40 @@ def _embed_batch(texts, batch_number, rate_limiter):
     token_count = sum(_count_tokens(text) for text in texts)
     print(f"Embedding batch {batch_number} | chunks={len(texts)} | tokens={token_count:,}")
 
-    if token_count > MAX_TPM:
+    if USE_VOYAGE and token_count > MAX_TPM:
         raise ValueError(f"Batch {batch_number} contains {token_count:,} tokens, exceeding MAX_TPM={MAX_TPM:,}.")
 
     for attempt in range(MAX_RETRIES + 1):
         try:
-            rate_limiter.wait(token_count)
-            print(f"Sending batch {batch_number} to Voyage...")
+            if USE_VOYAGE: rate_limiter.wait(token_count)
+            print(f"Sending batch {batch_number} to {'Voyage' if USE_VOYAGE else 'Ollama'}...")
             vectors = embeddings.embed_documents(texts)
-            rate_limiter.record(token_count)
+
+            if USE_VOYAGE: rate_limiter.record(token_count)
             print(f"Batch {batch_number} completed.")
             return vectors
 
         except voyageai.error.RateLimitError as e:
+            if not USE_VOYAGE: raise
+
             if attempt == MAX_RETRIES:
-                print(f"Rate limit: batch {batch_number} failed after {MAX_RETRIES + 1} attempts: {e}")
+                print(f"Rate limit: batch {batch_number} failed: {e}")
                 return None
+
             wait_time = 60
-            print(f"Rate limit on batch {batch_number}. Retrying in {wait_time}s...")
+            print(f"Rate limit. Retrying in {wait_time}s...")
             time.sleep(wait_time)
 
         except (TimeoutError, ConnectionError) as e:
             if attempt == MAX_RETRIES:
-                print(f"Network error: batch {batch_number} failed after {MAX_RETRIES + 1} attempts: {e}")
+                print(f"Network error: batch {batch_number} failed: {e}")
                 return None
             wait_time = 60
-            print(f"Network error on batch {batch_number}: {e}. Retrying in {wait_time}s...")
+            print(f"Network error. Retrying in {wait_time}s...")
             time.sleep(wait_time)
 
         except Exception as e:
-            print(f"Permanent embedding error on batch {batch_number}: {type(e).__name__}: {e}")
+            print(f"Embedding error on batch {batch_number}: {type(e).__name__}: {e}")
             return None
 
     return None
@@ -304,3 +314,22 @@ def add_documents(chunks):
         "deleted": deleted,
         "failed_chunks": failed_chunks
     }
+
+def get_document_ids():
+    result = (
+        supabase_client
+        .table("documents")
+        .select("document_id")
+        .execute()
+    )
+    return {row["document_id"] for row in result.data or []}
+
+def delete_document(document_id):
+    (
+        supabase_client
+        .table("documents")
+        .delete()
+        .eq("document_id", document_id)
+        .execute()
+    )
+    print(f"Deleted document: {document_id}")

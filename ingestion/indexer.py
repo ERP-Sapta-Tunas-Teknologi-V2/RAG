@@ -14,7 +14,7 @@ def index_document(file_path: str):
 
     category = path.parent.name
     source = path.name
-    document_id = path.stem
+    document_id = f"{category}:{path.stem}"
     uploaded_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     if category == "sop":

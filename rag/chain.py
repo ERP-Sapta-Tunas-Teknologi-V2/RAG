@@ -27,8 +27,6 @@ def generate_answer(question: str, documents):
         document.page_content
         for document in documents
     )
-
     messages = prompt.format_messages(context=context, question=question)
-
     response = llm.invoke(messages)
     return response.content, context
