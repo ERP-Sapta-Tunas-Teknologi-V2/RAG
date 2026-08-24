@@ -3,8 +3,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-FILE_TO_INGEST = os.getenv("FILE_TO_INGEST")
-
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
