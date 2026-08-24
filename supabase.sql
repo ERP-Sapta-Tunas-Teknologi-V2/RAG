@@ -1,14 +1,4 @@
--- ============================================================
--- Supabase PostgreSQL + pgvector setup
--- ============================================================
-
--- Enable pgvector
 create extension if not exists vector;
-
-
--- ============================================================
--- TABLE: documents
--- ============================================================
 
 drop table if exists public.documents;
 
@@ -17,27 +7,13 @@ create table public.documents (
     content text,
     metadata jsonb,
     document_id text not null,
+    chunk_index int not null,
     fingerprint text not null,
     embedding vector(1024)
 );
 
-
--- ============================================================
--- DEDUPLICATION
--- ============================================================
--- Prevent duplicate chunks within the same document.
---
--- fingerprint = SHA-256(content)
--- document_id + fingerprint = unique chunk identity
--- ============================================================
-
-create unique index documents_document_fingerprint_unique
-on public.documents(document_id, fingerprint);
-
-
--- ============================================================
--- FULL-TEXT SEARCH
--- ============================================================
+create unique index documents_document_chunk_unique
+on public.documents(document_id, chunk_index);
 
 alter table public.documents
 add column fts tsvector
@@ -48,11 +24,6 @@ generated always as (
 create index documents_fts_idx
 on public.documents
 using gin (fts);
-
-
--- ============================================================
--- VECTOR SEARCH
--- ============================================================
 
 create or replace function public.match_documents(
     query_embedding vector(1024),
@@ -76,15 +47,6 @@ as $$
     order by documents.embedding <=> query_embedding
     limit match_count;
 $$;
-
-
--- ============================================================
--- HYBRID SEARCH
--- Combines:
---   1. Full-text search
---   2. Semantic/vector search
---   3. Reciprocal Rank Fusion (RRF)
--- ============================================================
 
 create or replace function public.hybrid_search(
     query_text text,
@@ -170,54 +132,38 @@ as $$
     limit match_count;
 $$;
 
-
--- ============================================================
--- SEQUENCE PERMISSION
--- Required for INSERT using BIGSERIAL
--- ============================================================
-
 grant usage, select
 on sequence public.documents_id_seq
 to anon;
 
-
--- ============================================================
--- TABLE PERMISSIONS
--- ============================================================
-
-grant select, insert, update
+grant select, insert, update, delete
 on public.documents
 to anon;
-
-
--- ============================================================
--- ROW LEVEL SECURITY
--- ============================================================
 
 alter table public.documents
 enable row level security;
 
-
--- INSERT
 create policy "Allow insert documents"
 on public.documents
 for insert
 to anon
 with check (true);
 
-
--- SELECT
 create policy "Allow select documents"
 on public.documents
 for select
 to anon
 using (true);
 
-
--- UPDATE
 create policy "Allow update documents"
 on public.documents
 for update
 to anon
 using (true)
 with check (true);
+
+create policy "Allow delete documents"
+on public.documents
+for delete
+to anon
+using (true);

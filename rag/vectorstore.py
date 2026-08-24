@@ -124,43 +124,67 @@ def _embed_batch(texts, batch_number, rate_limiter):
 
 def add_documents(chunks):
     inserted = 0
+    updated = 0
     skipped = 0
     failed = 0
-    pending = []
+    deleted = 0
     failed_chunks = []
+
+    if not chunks:
+        print("No chunks to process.")
+        return {
+            "inserted": 0,
+            "updated": 0,
+            "skipped": 0,
+            "failed": 0,
+            "deleted": 0,
+            "failed_chunks": []
+        }
+
+    document_id = chunks[0].metadata["document_id"]
+    pending = []
 
     for chunk in chunks:
         metadata = chunk.metadata.copy()
-        document_id = metadata.pop("document_id")
+
+        chunk_document_id = metadata.pop("document_id")
+        chunk_index = metadata.pop("chunk_index")
         fingerprint = metadata.pop("fingerprint")
+
+        if chunk_document_id != document_id:
+            raise ValueError("All chunks must belong to the same document.")
 
         existing = (
             supabase_client
             .table("documents")
-            .select("id")
+            .select("id, fingerprint")
             .eq("document_id", document_id)
-            .eq("fingerprint", fingerprint)
+            .eq("chunk_index", chunk_index)
             .limit(1)
             .execute()
         )
 
-        if existing.data:
+        if existing.data and existing.data[0]["fingerprint"] == fingerprint:
             skipped += 1
             continue
 
         pending.append({
             "chunk": chunk,
             "document_id": document_id,
+            "chunk_index": chunk_index,
             "fingerprint": fingerprint,
-            "metadata": metadata
+            "metadata": metadata,
+            "existing_id": existing.data[0]["id"] if existing.data else None
         })
 
-    if not pending:
-        print(f"New chunks: 0 | Skipped: {skipped}")
-        return {"inserted": inserted, "skipped": skipped, "failed": failed, "failed_chunks": failed_chunks}
-
     batches = _create_batches(pending)
-    print(f"New chunks: {len(pending)} | Batches: {len(batches)} | Target batch tokens: {TARGET_BATCH_TOKENS:,}")
+
+    print(
+        f"New/changed chunks: {len(pending)} | "
+        f"Batches: {len(batches)} | "
+        f"Skipped: {skipped} | "
+        f"Target batch tokens: {TARGET_BATCH_TOKENS:,}"
+    )
 
     rate_limiter = VoyageRateLimiter(max_rpm=MAX_RPM, max_tpm=MAX_TPM)
 
@@ -174,6 +198,12 @@ def add_documents(chunks):
             print(f"Batch {batch_number} failed. Skipping {len(batch)} chunks.")
             continue
 
+        if len(vectors) != len(batch):
+            failed += len(batch)
+            failed_chunks.extend(batch)
+            print(f"Batch {batch_number} returned {len(vectors)} vectors for {len(batch)} chunks.")
+            continue
+
         rows = []
 
         for item, vector in zip(batch, vectors):
@@ -181,25 +211,96 @@ def add_documents(chunks):
                 "content": item["chunk"].page_content,
                 "metadata": item["metadata"],
                 "document_id": item["document_id"],
+                "chunk_index": item["chunk_index"],
                 "fingerprint": item["fingerprint"],
                 "embedding": vector
             })
 
         try:
-            supabase_client.table("documents").insert(rows).execute()
-            inserted += len(rows)
-            print(f"Inserted batch {batch_number}: {len(rows)} chunks")
+            supabase_client \
+                .table("documents") \
+                .upsert(
+                    rows,
+                    on_conflict="document_id,chunk_index"
+                ) \
+                .execute()
+
+            for item in batch:
+                if item["existing_id"]:
+                    updated += 1
+                else:
+                    inserted += 1
+
+            print(f"Upserted batch {batch_number}: {len(batch)} chunks")
 
         except Exception as e:
             failed += len(batch)
             failed_chunks.extend(batch)
-            print(f"Supabase insert failed for batch {batch_number}: {type(e).__name__}: {e}")
+            print(f"Supabase upsert failed for batch {batch_number}: {type(e).__name__}: {e}")
 
-    print(f"Inserted: {inserted} | Skipped: {skipped} | Failed: {failed}")
+    # Jangan delete stale chunks jika ada kegagalan.
+    if failed == 0:
+        current_chunk_indexes = [
+            chunk.metadata["chunk_index"]
+            for chunk in chunks
+        ]
+
+        existing_rows = (
+            supabase_client
+            .table("documents")
+            .select("id, chunk_index")
+            .eq("document_id", document_id)
+            .execute()
+        )
+
+        stale_ids = [
+            row["id"]
+            for row in existing_rows.data or []
+            if row["chunk_index"] not in current_chunk_indexes
+        ]
+
+        if stale_ids:
+            try:
+                supabase_client \
+                    .table("documents") \
+                    .delete() \
+                    .in_("id", stale_ids) \
+                    .execute()
+
+                deleted = len(stale_ids)
+
+                print(f"Deleted stale chunks: {deleted}")
+
+            except Exception as e:
+                print(f"Failed to delete stale chunks: {type(e).__name__}: {e}")
+
+    else:
+        print(f"Skipping stale deletion because {failed} chunks failed.")
+
+    print(
+        f"Inserted: {inserted} | "
+        f"Updated: {updated} | "
+        f"Skipped: {skipped} | "
+        f"Failed: {failed} | "
+        f"Deleted: {deleted}"
+    )
 
     if failed_chunks:
         print("\nFailed chunks:")
-        for item in failed_chunks:
-            print(f"FAILED | document_id={item['document_id']} | fingerprint={item['fingerprint']}")
 
-    return {"inserted": inserted, "skipped": skipped, "failed": failed, "failed_chunks": failed_chunks}
+        for item in failed_chunks:
+            print(
+                f"FAILED | "
+                f"document_id={item['document_id']} | "
+                f"chunk_index={item['chunk_index']} | "
+                f"fingerprint={item['fingerprint']}"
+            )
+
+    return {
+        "inserted": inserted,
+        "updated": updated,
+        "skipped": skipped,
+        "failed": failed,
+        "deleted": deleted,
+        "failed_chunks": failed_chunks
+    }
