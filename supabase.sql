@@ -16,8 +16,23 @@ create table public.documents (
     id bigserial primary key,
     content text,
     metadata jsonb,
+    document_id text not null,
+    fingerprint text not null,
     embedding vector(1024)
 );
+
+
+-- ============================================================
+-- DEDUPLICATION
+-- ============================================================
+-- Prevent duplicate chunks within the same document.
+--
+-- fingerprint = SHA-256(content)
+-- document_id + fingerprint = unique chunk identity
+-- ============================================================
+
+create unique index documents_document_fingerprint_unique
+on public.documents(document_id, fingerprint);
 
 
 -- ============================================================

@@ -5,7 +5,7 @@ from datetime import datetime
 from ingestion.cleaner import preprocessing
 from ingestion.loader import load_markdown, load_document
 from ingestion.splitter import StructureAwareChunker
-from rag.vectorstore import vectorstore
+from rag.vectorstore import add_documents
 
 chunker = StructureAwareChunker(max_tokens=1000)
 
@@ -40,5 +40,5 @@ def index_document(file_path: str):
         print(f"Created {len(chunks)} chunks.")
 
     print("Adding documents...")
-    vectorstore.add_documents(chunks)
+    add_documents(chunks)
     print("Documents successfully added.")

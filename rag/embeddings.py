@@ -4,4 +4,4 @@
 
 from langchain_voyageai import VoyageAIEmbeddings
 from config.settings import VOYAGE_KEY, VOYAGE_EMB_MODEL
-embeddings = VoyageAIEmbeddings(voyage_api_key=VOYAGE_KEY, model=VOYAGE_EMB_MODEL)
+embeddings = VoyageAIEmbeddings(voyage_api_key=VOYAGE_KEY, model=VOYAGE_EMB_MODEL, output_dimension=1024, truncation=False)
