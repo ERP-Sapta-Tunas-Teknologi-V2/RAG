@@ -40,5 +40,6 @@ def index_document(file_path: str):
         print(f"Created {len(chunks)} chunks.")
 
     print("Adding documents...")
-    add_documents(chunks)
-    print("Documents successfully added.")
+    result = add_documents(chunks)
+    if result["failed"]: print("Some chunks failed to process.")
+    else: print("Documents successfully added.")
