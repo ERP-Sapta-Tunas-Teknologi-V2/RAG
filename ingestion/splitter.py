@@ -16,7 +16,8 @@ class StructureAwareChunker:
         if hasattr(item, "export_to_markdown"):
             try:
                 text = item.export_to_markdown(doc=doc)
-                if text and text.strip(): return text
+                if text and text.strip(): 
+                    return text
             except Exception:
                 pass
 
@@ -55,10 +56,12 @@ class StructureAwareChunker:
 
             for item, level in docling_doc.iterate_items():
                 label = getattr(getattr(item, "label", None), "value", None)
-                if label == "picture": continue
+                if label == "picture": 
+                    continue
 
                 text = self._extract_item_text(item, docling_doc)
-                if not text or not text.strip(): continue
+                if not text or not text.strip(): 
+                    continue
 
                 blocks.append({"text": text.strip(), "label": label, "level": level, "pages": [page_number]})
 
@@ -69,10 +72,12 @@ class StructureAwareChunker:
 
         for item, level in docling_doc.iterate_items():
             label = getattr(getattr(item, "label", None), "value", None)
-            if label == "picture": continue
+            if label == "picture": 
+                continue
 
             text = self._extract_item_text(item, docling_doc)
-            if not text or not text.strip(): continue
+            if not text or not text.strip(): 
+                continue
 
             pages = []
 
@@ -102,7 +107,9 @@ class StructureAwareChunker:
             else:
                 current_section = {"title": None, "section": None, "blocks": [block]}
 
-        if current_section: sections.append(current_section)
+        if current_section: 
+            sections.append(current_section)
+
         return sections
 
     def _chunk_section(self, section):
@@ -135,13 +142,15 @@ class StructureAwareChunker:
             current_blocks.append(block)
             current_tokens += tokens
 
-        if current_blocks: chunks.append(self._make_chunk(current_blocks, heading))
+        if current_blocks: 
+            chunks.append(self._make_chunk(current_blocks, heading))
 
         return chunks
 
     def _split_table_block(self, block):
         lines = block["text"].splitlines()
-        if len(lines) <= 2: return [block]
+        if len(lines) <= 2: 
+            return [block]
 
         header = lines[:2]
         data_rows = lines[2:]
@@ -185,7 +194,11 @@ class StructureAwareChunker:
         return {"content": content, "pages": pages, "fingerprint": fingerprint}
 
     def _extract_section_number(self, title):
-        if not title: return None
+        if not title: 
+            return None
+        
         parts = title.split()
-        if parts and parts[0][0].isdigit(): return parts[0]
+        if parts and parts[0][0].isdigit(): 
+            return parts[0]
+        
         return None

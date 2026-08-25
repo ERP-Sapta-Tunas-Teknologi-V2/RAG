@@ -41,5 +41,7 @@ def index_document(file_path: str):
 
     print("Adding documents...")
     result = add_documents(chunks)
-    if result["failed"]: print("Some chunks failed to process.")
-    else: print("Documents successfully added.")
+    if result["failed"]: 
+        print("Some chunks failed to process.")
+    else: 
+        print("Documents successfully added.")

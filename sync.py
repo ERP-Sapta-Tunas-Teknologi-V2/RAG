@@ -13,15 +13,20 @@ def sync_documents(category=None):
     source_files = {}
 
     for path in SOURCE_DIR.rglob("*"):
-        if not path.is_file() or path.suffix.lower() not in SUPPORTED_EXTENSIONS: continue
+        if not path.is_file() or path.suffix.lower() not in SUPPORTED_EXTENSIONS: 
+            continue
+
         file_category = path.parent.name
-        if category and file_category != category: continue
+        if category and file_category != category: 
+            continue
+
         document_id = f"{file_category}:{path.stem}"
         source_files[document_id] = path
 
     source_ids = set(source_files)
     db_ids = get_document_ids()
-    if category: db_ids = {doc_id for doc_id in db_ids if doc_id.startswith(f"{category}:")}
+    if category: 
+        db_ids = {doc_id for doc_id in db_ids if doc_id.startswith(f"{category}:")}
 
     new_ids = source_ids - db_ids
     existing_ids = source_ids & db_ids
