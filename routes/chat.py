@@ -48,8 +48,8 @@ def chat():
 
     question = " ".join(question.split())
 
-    documents = hybrid_retrieve(question)
-    answer, context = generate_answer(question, documents)
+    documents, context = hybrid_retrieve(question)
+    answer = generate_answer(question, context)
 
     sources = [document.metadata for document in documents]
 

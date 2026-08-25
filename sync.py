@@ -6,7 +6,7 @@ from pathlib import Path
 from ingestion.indexer import index_document
 from rag.vectorstore import get_document_ids, delete_document
 
-SOURCE_DIR = Path("documents")
+SOURCE_DIR = Path("stt")
 SUPPORTED_EXTENSIONS = {".pdf", ".xlsx", ".docx"}
 
 def sync_documents(category=None):

@@ -101,9 +101,7 @@ Setiap chunk menyimpan metadata:
 source
 document_id
 chunk_index
-page
 section_title
-category
 uploaded_at
 fingerprint
 ```
@@ -290,7 +288,7 @@ Body:
 
 ```json
 {
-  "question": "Apa saja prinsip Good Corporate Governance?"
+  "question": "..."
 }
 ```
 
@@ -340,15 +338,13 @@ Response API:
 
 ```json
 {
-  "question": "Apa saja prinsip Good Corporate Governance?",
-  "answer": "Prinsip Good Corporate Governance meliputi ...",
+  "question": "...",
+  "answer": "...",
   "sources": [
     {
-      "source": "askrindo.pdf",
-      "page": [5],
-      "section_title": "1.5 Prinsip-Prinsip Good Corporate Governance",
-      "category": "sop",
-      "uploaded_at": "2026-08-25 10:00:00"
+      "source": "...",
+      "section_title": "...",
+      "uploaded_at": "..."
     }
   ]
 }
@@ -362,9 +358,7 @@ Response API:
 | `answer` | string | Jawaban yang dihasilkan LLM |
 | `sources` | array | Dokumen yang digunakan sebagai sumber |
 | `sources[].source` | string | Nama file sumber |
-| `sources[].page` | array | Nomor halaman sumber |
 | `sources[].section_title` | string/null | Judul section |
-| `sources[].category` | string | Kategori dokumen |
 | `sources[].uploaded_at` | string | Waktu dokumen di-index |
 
 `context` dan `retrieval_score` merupakan data internal backend dan tidak perlu digunakan oleh FE.
@@ -407,7 +401,7 @@ http://127.0.0.1:5000/api/chat
 
 ```json
 {
-  "question": "Apa saja prinsip Good Corporate Governance?"
+  "question": "..."
 }
 ```
 
@@ -418,7 +412,7 @@ http://127.0.0.1:5000/api/chat
 ```bash
 curl -X POST http://127.0.0.1:5000/api/chat \
   -H "Content-Type: application/json" \
-  -d "{\"question\":\"Apa saja prinsip Good Corporate Governance?\"}"
+  -d "{\"question\":\"...\"}"
 ```
 
 # Frontend Integration
