@@ -1,6 +1,5 @@
 import re
-
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, Response, stream_with_context
 
 from rag.retriever import hybrid_retrieve
 from rag.chain import generate_answer
@@ -8,7 +7,6 @@ from rag.chain import generate_answer
 chat_bp = Blueprint("chat", __name__)
 
 MAX_QUERY_LENGTH = 1000
-
 INJECTION_PATTERNS = [
     r"ignore\s+(all\s+)?previous\s+instructions",
     r"abaikan\s+(semua\s+)?instruksi\s+sebelumnya",
@@ -31,7 +29,6 @@ INJECTION_PATTERNS = [
     r"mulai\s+sekarang\s+anda\s+adalah\s+",
 ]
 
-
 def validate_query(question):
     if not isinstance(question, str):
         return "question must be a string"
@@ -50,6 +47,38 @@ def validate_query(question):
 
     return None
 
+# @chat_bp.route("/chat", methods=["POST"])
+# def chat():
+#     data = request.get_json(silent=True) or {}
+#     question = data.get("question")
+
+#     error = validate_query(question)
+#     if error:
+#         return jsonify({"error": error}), 400
+
+#     question = " ".join(question.split())
+#     documents, context = hybrid_retrieve(question)
+
+#     if not documents:
+#         answer = "Informasi tidak ditemukan dalam knowledge base. Silakan hubungi kontak kami."
+#         return jsonify({
+#             "question": question,
+#             "answer": answer,
+#             "context": "",
+#             "sources": [],
+#             "fallback": True
+#         })
+
+#     answer = generate_answer(question, context)
+#     sources = [document.metadata for document in documents]
+
+#     return jsonify({
+#         "question": question,
+#         "answer": answer,
+#         "context": context,
+#         "sources": sources,
+#         "fallback": False
+#     })
 
 @chat_bp.route("/chat", methods=["POST"])
 def chat():
@@ -57,37 +86,28 @@ def chat():
     question = data.get("question")
 
     error = validate_query(question)
-
     if error:
         return jsonify({"error": error}), 400
 
     question = " ".join(question.split())
-
     documents, context = hybrid_retrieve(question)
 
-    # No relevant chunk
     if not documents:
-        answer = (
-            "Informasi tidak ditemukan dalam knowledge base. "
-            "Silakan hubungi kontak kami."
-        )
-
         return jsonify({
             "question": question,
-            "answer": answer,
+            "answer": "Informasi tidak ditemukan dalam knowledge base. Silakan hubungi kontak kami.",
             "context": "",
             "sources": [],
             "fallback": True
         })
 
-    answer = generate_answer(question, context)
-
     sources = [document.metadata for document in documents]
 
-    return jsonify({
-        "question": question,
-        "answer": answer,
-        "context": context,
-        "sources": sources,
-        "fallback": False
-    })
+    def generate():
+        stream = generate_answer(question, context)
+        for chunk in stream:
+            content = chunk.choices[0].delta.content
+            if content:
+                yield content
+
+    return Response(stream_with_context(generate()), mimetype="text/plain")

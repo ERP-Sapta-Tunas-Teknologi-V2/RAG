@@ -39,7 +39,7 @@ Aturan:
 #     return response.content
 
 def generate_answer(question: str, context: str):
-    response = llm.chat.completions.create(
+    return llm.chat.completions.create(
         model=ARK_LLM,
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
@@ -48,6 +48,6 @@ def generate_answer(question: str, context: str):
                 "content": f"Context:\n{context}\n\nPertanyaan pengguna:\n{question}"
             }
         ],
-        temperature=0
+        temperature=0,
+        stream=True
     )
-    return response.choices[0].message.content
