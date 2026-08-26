@@ -4,6 +4,7 @@ import json
 
 from rag.retriever import hybrid_retrieve
 from rag.chain import generate_answer
+from extensions import limiter
 
 chat_bp = Blueprint("chat", __name__)
 
@@ -49,6 +50,7 @@ def validate_query(question):
     return None
 
 @chat_bp.route("/chat", methods=["POST"])
+@limiter.limit("10 per minute")
 def chat():
     data = request.get_json(silent=True) or {}
     question = data.get("question")
@@ -117,3 +119,8 @@ def chat():
         mimetype="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
     )
+
+@chat_bp.route("/rate-limit-test", methods=["GET"])
+@limiter.limit("10 per minute")
+def rate_limit_test():
+    return jsonify({"message": "ok"})

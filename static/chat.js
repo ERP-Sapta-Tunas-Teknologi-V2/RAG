@@ -59,7 +59,9 @@ form.addEventListener("submit", async e => {
         if (!response.ok) {
             const error = await response.json();
             bot.className = "message bot";
-            bot.textContent = error.error || "Terjadi kesalahan.";
+            bot.textContent = response.status === 429
+                ? "Terlalu banyak permintaan. Silakan coba lagi nanti."
+                : error.error || "Terjadi kesalahan.";
             return;
         }
 
