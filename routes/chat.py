@@ -2,6 +2,7 @@ import re
 import time
 from flask import Blueprint, request, jsonify, Response, stream_with_context
 import json
+import uuid
 
 from rag.retriever import hybrid_retrieve
 from rag.chain import generate_answer
@@ -53,6 +54,7 @@ def validate_query(question):
 @chat_bp.route("/chat", methods=["POST"])
 @limiter.limit("10 per minute")
 def chat():
+    request_id = uuid.uuid4().hex[:8]
     request_start = time.perf_counter()
 
     data = request.get_json(silent=True) or {}
@@ -63,7 +65,7 @@ def chat():
         return jsonify({"error": error}), 400
 
     question = " ".join(question.split())
-    documents, context = hybrid_retrieve(question)
+    documents, context = hybrid_retrieve(question, request_id)
 
     if not documents:
         answer = "Informasi tidak ditemukan dalam knowledge base. Silakan hubungi kontak kami."
@@ -122,9 +124,9 @@ def chat():
         answer = "".join(full_answer)
 
         log = (
-            f"[LLM] ttft={first_token_time:.3f}s | "
+            f"[{request_id}] [LLM] ttft={first_token_time:.3f}s | "
             f"total={llm_time:.3f}s\n"
-            f"[REQUEST] total={total_time:.3f}s\n"
+            f"[{request_id}] [REQUEST] total={total_time:.3f}s\n"
         )
 
         with open("log/log_time.txt", "a", encoding="utf-8") as f:

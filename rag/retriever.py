@@ -10,7 +10,7 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 RERANK_THRESHOLD = 5.0
 
-def hybrid_retrieve(question: str, candidate_k: int = 10, rerank_k: int = 3) -> tuple[list[Document], str]:
+def hybrid_retrieve(question: str, request_id: str, candidate_k: int = 10, rerank_k: int = 3) -> tuple[list[Document], str]:
     start = time.perf_counter()
 
     embedding_start = time.perf_counter()
@@ -31,7 +31,7 @@ def hybrid_retrieve(question: str, candidate_k: int = 10, rerank_k: int = 3) -> 
     documents = []
 
     with open("log/log_retrieval-docs.txt", "w", encoding="utf-8") as f:
-        f.write(f"QUESTION: {question}\n")
+        f.write(f"\n\n=== REQUEST {request_id} ===\nQUESTION: {question}\n")
 
     for row in result.data or []:
         metadata = row.get("metadata") or {}
@@ -72,7 +72,7 @@ def hybrid_retrieve(question: str, candidate_k: int = 10, rerank_k: int = 3) -> 
     total_time = time.perf_counter() - start
 
     log = (
-        f"\nquestion='{question}'\n"
+        f"\n[{request_id}] question='{question}'\n"
         "[RETRIEVAL] "
         f"embedding={embedding_time:.3f}s | "
         f"search={search_time:.3f}s | "
