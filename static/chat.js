@@ -25,7 +25,6 @@ function addTyping() {
 
 function setLoading(loading) {
     isLoading = loading;
-    input.disabled = loading;
     button.disabled = loading;
     button.textContent = loading ? "Menunggu..." : "Kirim";
 }

@@ -2,21 +2,15 @@ from supabase import create_client
 from langchain_core.documents import Document
 import time
 
-from config.settings import SUPABASE_URL, SUPABASE_KEY
 from rag.embeddings import embeddings
 from rag.reranker import rerank
 
+from config.settings import SUPABASE_URL, SUPABASE_KEY
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 RERANK_THRESHOLD = 5.0
 
-
-def hybrid_retrieve(
-    question: str,
-    candidate_k: int = 10,
-    rerank_k: int = 3
-) -> tuple[list[Document], str]:
-
+def hybrid_retrieve(question: str, candidate_k: int = 10, rerank_k: int = 3) -> tuple[list[Document], str]:
     start = time.perf_counter()
 
     embedding_start = time.perf_counter()
@@ -43,11 +37,7 @@ def hybrid_retrieve(
         metadata = row.get("metadata") or {}
         metadata["retrieval_score"] = row["hybrid_score"]
 
-        document = Document(
-            page_content=row["content"],
-            metadata=metadata
-        )
-
+        document = Document(page_content=row["content"], metadata=metadata)
         documents.append(document)
 
         with open("log/log_retrieval-docs.txt", "a", encoding="utf-8") as f:
@@ -59,18 +49,11 @@ def hybrid_retrieve(
             )
 
     rerank_start = time.perf_counter()
-
-    documents = rerank(
-        question,
-        documents,
-        top_k=rerank_k
-    )
-
+    documents = rerank(question, documents, top_k=rerank_k)
     rerank_time = time.perf_counter() - rerank_start
 
     with open("log/log_retrieval-docs.txt", "a", encoding="utf-8") as f:
         f.write("\n\n=== RERANK SCORES ===\n")
-
         for document in documents:
             f.write(
                 f"score={document.metadata['rerank_score']:.4f} | "
@@ -84,15 +67,13 @@ def hybrid_retrieve(
         if document.metadata["rerank_score"] >= RERANK_THRESHOLD
     ]
 
-    context = "\n\n".join(
-        document.page_content
-        for document in documents
-    )
+    context = "\n\n".join(document.page_content for document in documents)
 
     total_time = time.perf_counter() - start
 
     log = (
-        f"question='{question}' "
+        f"\nquestion='{question}'\n"
+        "[RETRIEVAL] "
         f"embedding={embedding_time:.3f}s | "
         f"search={search_time:.3f}s | "
         f"rerank={rerank_time:.3f}s | "
@@ -101,9 +82,8 @@ def hybrid_retrieve(
         f"total={total_time:.3f}s\n"
     )
 
-    print(f"[RETRIEVAL] {log}")
-
-    with open("log/log_retrieval-time.txt", "a", encoding="utf-8") as f:
+    print(log)
+    with open("log/log_time.txt", "a", encoding="utf-8") as f:
         f.write(log)
 
     return documents, context

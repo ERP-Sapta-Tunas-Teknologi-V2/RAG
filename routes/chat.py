@@ -1,4 +1,5 @@
 import re
+import time
 from flask import Blueprint, request, jsonify, Response, stream_with_context
 import json
 
@@ -52,6 +53,8 @@ def validate_query(question):
 @chat_bp.route("/chat", methods=["POST"])
 @limiter.limit("10 per minute")
 def chat():
+    request_start = time.perf_counter()
+
     data = request.get_json(silent=True) or {}
     question = data.get("question")
 
@@ -64,6 +67,7 @@ def chat():
 
     if not documents:
         answer = "Informasi tidak ditemukan dalam knowledge base. Silakan hubungi kontak kami."
+
         return jsonify({
             "question": question,
             "answer": answer,
@@ -87,8 +91,11 @@ def chat():
     def generate():
         yield f"data: {json.dumps({'type': 'metadata', 'sources': sources, 'fallback': False}, ensure_ascii=False)}\n\n"
 
-        stream = generate_answer(question, context)
+        llm_start = time.perf_counter()
+        first_token_time = None
         full_answer = []
+
+        stream = generate_answer(question, context)
 
         for chunk in stream:
             # Ollama
@@ -102,10 +109,26 @@ def chat():
             if not content:
                 continue
 
+            if first_token_time is None:
+                first_token_time = time.perf_counter() - llm_start
+
             full_answer.append(content)
+
             yield f"data: {json.dumps({'type': 'token', 'content': content}, ensure_ascii=False)}\n\n"
 
+        llm_time = time.perf_counter() - llm_start
+        total_time = time.perf_counter() - request_start
+
         answer = "".join(full_answer)
+
+        log = (
+            f"[LLM] ttft={first_token_time:.3f}s | "
+            f"total={llm_time:.3f}s\n"
+            f"[REQUEST] total={total_time:.3f}s\n"
+        )
+
+        with open("log/log_time.txt", "a", encoding="utf-8") as f:
+            f.write(log)
 
         print("\n=== FULL ANSWER ===")
         print(answer)
