@@ -1,5 +1,6 @@
 import re
 from flask import Blueprint, request, jsonify, Response, stream_with_context
+import json
 
 from rag.retriever import hybrid_retrieve
 from rag.chain import generate_answer
@@ -47,39 +48,6 @@ def validate_query(question):
 
     return None
 
-# @chat_bp.route("/chat", methods=["POST"])
-# def chat():
-#     data = request.get_json(silent=True) or {}
-#     question = data.get("question")
-
-#     error = validate_query(question)
-#     if error:
-#         return jsonify({"error": error}), 400
-
-#     question = " ".join(question.split())
-#     documents, context = hybrid_retrieve(question)
-
-#     if not documents:
-#         answer = "Informasi tidak ditemukan dalam knowledge base. Silakan hubungi kontak kami."
-#         return jsonify({
-#             "question": question,
-#             "answer": answer,
-#             "context": "",
-#             "sources": [],
-#             "fallback": True
-#         })
-
-#     answer = generate_answer(question, context)
-#     sources = [document.metadata for document in documents]
-
-#     return jsonify({
-#         "question": question,
-#         "answer": answer,
-#         "context": context,
-#         "sources": sources,
-#         "fallback": False
-#     })
-
 @chat_bp.route("/chat", methods=["POST"])
 def chat():
     data = request.get_json(silent=True) or {}
@@ -93,9 +61,10 @@ def chat():
     documents, context = hybrid_retrieve(question)
 
     if not documents:
+        answer = "Informasi tidak ditemukan dalam knowledge base. Silakan hubungi kontak kami."
         return jsonify({
             "question": question,
-            "answer": "Informasi tidak ditemukan dalam knowledge base. Silakan hubungi kontak kami.",
+            "answer": answer,
             "context": "",
             "sources": [],
             "fallback": True
@@ -103,11 +72,42 @@ def chat():
 
     sources = [document.metadata for document in documents]
 
+#     answer = generate_answer(question, context)
+#     return jsonify({
+#         "question": question,
+#         "answer": answer,
+#         "context": context,
+#         "sources": sources,
+#         "fallback": False
+#     })
+
     def generate():
         stream = generate_answer(question, context)
         for chunk in stream:
             content = chunk.choices[0].delta.content
             if content:
-                yield content
+                yield f"data: {json.dumps({'type': 'token', 'content': content}, ensure_ascii=False)}\n\n"
+        yield f"data: {json.dumps({'type': 'done'})}\n\n"
 
-    return Response(stream_with_context(generate()), mimetype="text/plain")
+    return Response(
+        stream_with_context(generate()),
+        mimetype="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
+    )
+
+# Front-end :
+# const response = await fetch("/chat", {
+#   method: "POST",
+#   headers: {"Content-Type": "application/json"},
+#   body: JSON.stringify({question})
+# });
+
+# const reader = response.body.getReader();
+# const decoder = new TextDecoder();
+
+# while (true) {
+#   const {value, done} = await reader.read();
+#   if (done) break;
+
+#   console.log(decoder.decode(value));
+# }
