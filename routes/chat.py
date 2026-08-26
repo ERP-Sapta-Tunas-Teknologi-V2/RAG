@@ -83,11 +83,28 @@ def chat():
 
     def generate():
         yield f"data: {json.dumps({'type': 'metadata', 'sources': sources, 'fallback': False}, ensure_ascii=False)}\n\n"
+
         stream = generate_answer(question, context)
+        full_answer = []
+
         for chunk in stream:
-            content = chunk.choices[0].delta.content
-            if content:
-                yield f"data: {json.dumps({'type': 'token', 'content': content}, ensure_ascii=False)}\n\n"
+            if not chunk.choices:
+                continue
+
+            content = getattr(chunk.choices[0].delta, "content", None)
+            if not content:
+                continue
+
+            full_answer.append(content)
+            yield f"data: {json.dumps({'type': 'token', 'content': content}, ensure_ascii=False)}\n\n"
+
+        answer = "".join(full_answer)
+
+        print("\n=== FULL ANSWER ===")
+        print(answer)
+        print("=====================\n")
+
+        yield f"data: {json.dumps({'type': 'answer', 'content': answer}, ensure_ascii=False)}\n\n"
         yield f"data: {json.dumps({'type': 'done'})}\n\n"
 
     return Response(
