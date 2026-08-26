@@ -5,8 +5,8 @@ from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from transformers import AutoTokenizer
 
-from config.settings import OLLAMA_BASE_URL, LLM_MODEL
-llm = ChatOllama(model=LLM_MODEL, base_url=OLLAMA_BASE_URL, temperature=0)
+from config.settings import OLLAMA_BASE_URL, OLLAMA_LLM
+llm = ChatOllama(model=OLLAMA_LLM, base_url=OLLAMA_BASE_URL, temperature=0)
 
 TOKENIZER_MODEL = "BAAI/bge-m3"
 MAX_BATCH_TOKENS = 1000

@@ -19,12 +19,10 @@ def hybrid_retrieve(
 
     start = time.perf_counter()
 
-    # Embedding
     embedding_start = time.perf_counter()
     query_embedding = embeddings.embed_query(question)
     embedding_time = time.perf_counter() - embedding_start
 
-    # Hybrid search
     search_start = time.perf_counter()
 
     result = supabase.rpc("hybrid_search", {
@@ -36,7 +34,6 @@ def hybrid_retrieve(
 
     search_time = time.perf_counter() - search_start
 
-    # Convert search results to Documents
     documents = []
 
     with open("log/log_retrieval-docs.txt", "w", encoding="utf-8") as f:
@@ -61,7 +58,6 @@ def hybrid_retrieve(
                 f"{document.metadata}\n"
             )
 
-    # Reranking
     rerank_start = time.perf_counter()
 
     documents = rerank(
@@ -72,7 +68,6 @@ def hybrid_retrieve(
 
     rerank_time = time.perf_counter() - rerank_start
 
-    # Log rerank scores
     with open("log/log_retrieval-docs.txt", "a", encoding="utf-8") as f:
         f.write("\n\n=== RERANK SCORES ===\n")
 
@@ -83,14 +78,12 @@ def hybrid_retrieve(
                 f"page={document.metadata.get('page')}\n"
             )
 
-    # Threshold filtering
     documents = [
         document
         for document in documents
         if document.metadata["rerank_score"] >= RERANK_THRESHOLD
     ]
 
-    # Build context
     context = "\n\n".join(
         document.page_content
         for document in documents

@@ -5,7 +5,7 @@ from supabase.client import create_client
 from langchain_voyageai import VoyageAIEmbeddings
 from langchain_ollama import OllamaEmbeddings
 
-from config.settings import SUPABASE_URL, SUPABASE_KEY, VOYAGE_EMB_MODEL, EMBEDDING_MODEL
+from config.settings import SUPABASE_URL, SUPABASE_KEY, VOYAGE_EMB_MODEL, LOCAL_EMB_MODEL
 from rag.embeddings import embeddings
 
 supabase_client = create_client(SUPABASE_URL, SUPABASE_KEY)

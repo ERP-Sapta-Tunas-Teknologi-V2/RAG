@@ -2,11 +2,11 @@ from langchain_core.documents import Document
 from transformers import AutoTokenizer
 import hashlib
 
-EMBEDDING_MODEL = "BAAI/bge-m3"
+LOCAL_EMB_MODEL = "BAAI/bge-m3"
 
 class StructureAwareChunker:
     def __init__(self, max_tokens=1000):
-        self.tokenizer = AutoTokenizer.from_pretrained(EMBEDDING_MODEL)
+        self.tokenizer = AutoTokenizer.from_pretrained(LOCAL_EMB_MODEL)
         self.max_tokens = max_tokens
 
     def _extract_item_text(self, item, doc):
