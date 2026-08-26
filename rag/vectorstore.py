@@ -3,7 +3,6 @@ import voyageai
 from transformers import AutoTokenizer
 from supabase.client import create_client
 from langchain_voyageai import VoyageAIEmbeddings
-from langchain_ollama import OllamaEmbeddings
 
 from config.settings import SUPABASE_URL, SUPABASE_KEY, VOYAGE_EMB_MODEL, LOCAL_EMB_MODEL
 from rag.embeddings import embeddings

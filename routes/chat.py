@@ -82,6 +82,7 @@ def chat():
 #     })
 
     def generate():
+        yield f"data: {json.dumps({'type': 'metadata', 'sources': sources, 'fallback': False}, ensure_ascii=False)}\n\n"
         stream = generate_answer(question, context)
         for chunk in stream:
             content = chunk.choices[0].delta.content
@@ -94,20 +95,3 @@ def chat():
         mimetype="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
     )
-
-# Front-end :
-# const response = await fetch("/chat", {
-#   method: "POST",
-#   headers: {"Content-Type": "application/json"},
-#   body: JSON.stringify({question})
-# });
-
-# const reader = response.body.getReader();
-# const decoder = new TextDecoder();
-
-# while (true) {
-#   const {value, done} = await reader.read();
-#   if (done) break;
-
-#   console.log(decoder.decode(value));
-# }
