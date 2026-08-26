@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, send_from_directory
 
 from routes.chat import chat_bp
 
@@ -9,7 +9,7 @@ def create_app():
 
     @app.route("/")
     def index():
-        return {"message": "RAG Service is running"}
+        return send_from_directory("static","index.html")
 
     return app
 

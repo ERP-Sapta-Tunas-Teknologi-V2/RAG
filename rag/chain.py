@@ -38,11 +38,12 @@ Aturan:
 # Jawaban:
 # """)
 
+# Ollama
 # def generate_answer(question: str, context: str):
 #     messages = prompt.format_messages(context=context, question=question)
-#     response = llm.invoke(messages)
-#     return response.content
+#     return llm.stream(messages)
 
+# API
 def generate_answer(question: str, context: str):
     return llm.chat.completions.create(
         # model=ARK_LLM,

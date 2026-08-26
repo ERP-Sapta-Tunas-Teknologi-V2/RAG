@@ -72,6 +72,7 @@ def chat():
 
     sources = [document.metadata for document in documents]
 
+# Non-Stream
 #     answer = generate_answer(question, context)
 #     return jsonify({
 #         "question": question,
@@ -88,10 +89,14 @@ def chat():
         full_answer = []
 
         for chunk in stream:
+            # Ollama
+            # content = chunk.content
+
+            # API
             if not chunk.choices:
                 continue
-
             content = getattr(chunk.choices[0].delta, "content", None)
+
             if not content:
                 continue
 
