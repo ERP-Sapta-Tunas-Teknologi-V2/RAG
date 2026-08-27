@@ -200,3 +200,27 @@ on public.query_logs
 for select
 to anon
 using (true);
+
+create or replace function public.delete_expired_query_logs()
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    deleted_count integer;
+begin
+    delete from public.query_logs
+    where timestamp < now() - interval '30 days';
+
+    get diagnostics deleted_count = row_count;
+    return deleted_count;
+end;
+$$;
+
+revoke execute
+on function public.delete_expired_query_logs()
+from anon, authenticated;
+
+create index idx_query_logs_timestamp
+on public.query_logs(timestamp);

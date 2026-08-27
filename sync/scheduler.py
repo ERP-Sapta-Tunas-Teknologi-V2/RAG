@@ -1,5 +1,6 @@
 from apscheduler.schedulers.blocking import BlockingScheduler
 from sync import sync_documents
+from sync import delete_expired_logs
 
 scheduler = BlockingScheduler(timezone="Asia/Jakarta")
 
@@ -28,6 +29,16 @@ for category in STATIC_CATEGORIES:
         id=f"sync_{category}_weekly",
         replace_existing=True
     )
+
+delete_expired_logs()
+scheduler.add_job(
+    delete_expired_logs,
+    "cron",
+    hour=2,  # setiap hari pukul 02.00
+    minute=0,
+    id="delete_expired_query_logs",
+    replace_existing=True
+)
 
 print("Scheduler started.")
 scheduler.start()
