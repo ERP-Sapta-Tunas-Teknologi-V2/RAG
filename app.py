@@ -2,12 +2,14 @@ from flask import Flask, send_from_directory, jsonify
 
 from utils.extensions import limiter
 from routes.chat import chat_bp
+from routes.analytics import analytics_bp
 
 def create_app():
     app = Flask(__name__)
-
     limiter.init_app(app)
+
     app.register_blueprint(chat_bp, url_prefix="/api")
+    app.register_blueprint(analytics_bp, url_prefix="/api")
 
     @app.route("/")
     def index():
