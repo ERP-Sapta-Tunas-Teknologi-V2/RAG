@@ -1,6 +1,6 @@
 from flask import Flask, send_from_directory, jsonify
 
-from extensions import limiter
+from utils.extensions import limiter
 from routes.chat import chat_bp
 
 def create_app():

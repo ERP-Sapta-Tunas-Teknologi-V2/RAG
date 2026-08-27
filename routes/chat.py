@@ -6,7 +6,7 @@ import uuid
 
 from rag.retriever import hybrid_retrieve
 from rag.chain import generate_answer
-from extensions import limiter
+from utils.extensions import limiter
 
 chat_bp = Blueprint("chat", __name__)
 

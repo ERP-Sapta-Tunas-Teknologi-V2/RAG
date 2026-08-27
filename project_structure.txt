@@ -1,0 +1,35 @@
+﻿|-- config
+|   |-- settings.py
+|-- ingestion
+|   |-- cleaner.py
+|   |-- indexer.py
+|   |-- loader.py
+|   |-- splitter.py
+|-- rag
+|   |-- chain.py
+|   |-- embeddings.py
+|   |-- reranker.py
+|   |-- retriever.py
+|   |-- vectorstore.py
+|-- routes
+|   |-- chat.py
+|-- static
+|   |-- chat.js
+|   |-- index.html
+|   |-- style.css
+|-- sync
+|   |-- ingest.py
+|   |-- scheduler.py
+|   |-- sync.py
+|-- tests
+|   |-- load_test.py
+|-- utils
+|   |-- extensions.py
+|-- .env.example
+|-- .gitattributes
+|-- .gitignore
+|-- app.py
+|-- README.md
+|-- requirements.txt
+|-- supabase.sql
+|-- test.ipynb
