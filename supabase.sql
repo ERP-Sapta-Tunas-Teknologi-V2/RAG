@@ -1,3 +1,5 @@
+-- TABLE: documents
+
 create extension if not exists vector;
 
 drop table if exists public.documents;
@@ -167,3 +169,14 @@ on public.documents
 for delete
 to anon
 using (true);
+
+-- TABLE: query_logs
+
+drop table if exists public.query_logs;
+
+create table public.query_logs (
+    id bigint generated always as identity primary key,
+    query text not null,
+    timestamp timestamptz not null default now(),
+    anon_id uuid not null
+);
