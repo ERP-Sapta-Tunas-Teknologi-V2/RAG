@@ -5,6 +5,7 @@ import time
 from rag.embeddings import embeddings
 from rag.reranker import rerank
 from utils.supabase_client import supabase
+from utils.anonymizer import anonymize_query
 
 RERANK_THRESHOLD = 5.0
 
@@ -28,8 +29,10 @@ def hybrid_retrieve(question: str, request_id: str, candidate_k: int = 10, reran
 
     documents = []
 
+    safe_query = anonymize_query(question)
+
     with open("log/log_retrieval-docs.txt", "w", encoding="utf-8") as f:
-        f.write(f"\n\n=== REQUEST {request_id} ===\nQUESTION: {question}\n")
+        f.write(f"\n\n=== REQUEST {request_id} ===\nQUESTION: {safe_query}\n")
 
     for row in result.data or []:
         metadata = row.get("metadata") or {}
@@ -70,7 +73,7 @@ def hybrid_retrieve(question: str, request_id: str, candidate_k: int = 10, reran
     total_time = time.perf_counter() - start
 
     log = (
-        f"\n[{request_id}] question='{question}'\n"
+        f"\n[{request_id}] question='{safe_query}'\n"
         "[RETRIEVAL] "
         f"embedding={embedding_time:.3f}s | "
         f"search={search_time:.3f}s | "
