@@ -3,7 +3,7 @@ from pathlib import Path
 from datetime import datetime
 
 from ingestion.cleaner import preprocessing
-from ingestion.loader import load_document
+from ingestion.loader import load_markdown
 from ingestion.splitter import StructureAwareChunker
 from rag.vectorstore import add_documents
 
@@ -17,15 +17,23 @@ def index_document(file_path: str):
     uploaded_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     print(f'Cleaning document...')
-    markdown = preprocessing(file_path)
+    markdown = preprocessing(path, document_id)
     print("Cleaned.")
 
     print(f"Loading document...")
-    documents = load_document(markdown)
+    documents = load_markdown(markdown)
     print("Loaded.")
 
     print("Creating chunks...")
     chunks = chunker.split_document(documents, source, document_id, uploaded_at)
+    for i, chunk in enumerate(chunks):
+        tokens = len(chunk.page_content.split())
+        print(
+            f"Chunk {i}: "
+            f"pages={chunk.metadata['page']} | "
+            f"tokens={tokens} | "
+            f"section={chunk.metadata['section_title']!r}"
+        )
     print(f"Created {len(chunks)} chunks.")
 
     print("Adding documents...")

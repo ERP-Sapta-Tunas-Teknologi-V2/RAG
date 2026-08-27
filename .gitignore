@@ -2,6 +2,7 @@
 *.pyc
 *.ipynb
 /log
-/markdown
 /documents
 /stt
+/files
+/label
