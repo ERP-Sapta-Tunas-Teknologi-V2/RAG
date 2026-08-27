@@ -1,14 +1,44 @@
-from flask import Blueprint, Response
+from flask import Blueprint, Response, request
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 from sync.export_logs import export_query_logs
 
 analytics_bp = Blueprint("analytics", __name__)
 
+JAKARTA_TZ = ZoneInfo("Asia/Jakarta")
+
+def parse_date(value):
+    if not value:
+        return None
+
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").replace(tzinfo=JAKARTA_TZ)
+    except ValueError:
+        raise ValueError("date must use YYYY-MM-DD format")
+
 @analytics_bp.route("/logs/export", methods=["GET"])
 def export_logs():
-    csv_data = export_query_logs()
+    try:
+        start = parse_date(request.args.get("start"))
+        end = parse_date(request.args.get("end"))
 
-    return Response(
-        csv_data,
-        mimetype="text/csv",
-        headers={"Content-Disposition": "attachment; filename=query_logs.csv"}
-    )
+        if start and end and start > end:
+            return {"error": "start must not be after end"}, 400
+
+        end = end + timedelta(days=1) if end else None
+
+        csv_data = export_query_logs(
+            start.isoformat() if start else None,
+            end.isoformat() if end else None
+        )
+
+        return Response(
+            csv_data,
+            mimetype="text/csv",
+            headers={
+                "Content-Disposition": "attachment; filename=query_logs.csv"
+            }
+        )
+
+    except ValueError as e:
+        return {"error": str(e)}, 400

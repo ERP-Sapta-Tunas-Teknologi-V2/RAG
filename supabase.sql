@@ -224,3 +224,6 @@ from anon, authenticated;
 
 create index idx_query_logs_timestamp
 on public.query_logs(timestamp);
+
+alter database postgres
+set timezone = 'Asia/Jakarta';
