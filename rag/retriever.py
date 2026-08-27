@@ -4,9 +4,7 @@ import time
 
 from rag.embeddings import embeddings
 from rag.reranker import rerank
-
-from config.settings import SUPABASE_URL, SUPABASE_KEY
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+from utils.supabase_client import supabase
 
 RERANK_THRESHOLD = 5.0
 

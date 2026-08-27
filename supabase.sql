@@ -180,3 +180,23 @@ create table public.query_logs (
     timestamp timestamptz not null default now(),
     anon_id uuid not null
 );
+
+grant insert, select
+on table public.query_logs 
+to anon;
+
+grant usage, select 
+on sequence public.query_logs_id_seq 
+to anon;
+
+create policy "Allow anon insert query logs"
+on public.query_logs
+for insert
+to anon
+with check (true);
+
+create policy "Allow anon select query logs"
+on public.query_logs
+for select
+to anon
+using (true);

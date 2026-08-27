@@ -8,6 +8,7 @@ from rag.retriever import hybrid_retrieve
 from rag.chain import generate_answer
 from utils.extensions import limiter
 from utils.anonymizer import anonymize_query
+from utils.query_logger import log_query
 
 chat_bp = Blueprint("chat", __name__)
 
@@ -66,7 +67,11 @@ def chat():
         return jsonify({"error": error}), 400
 
     question = " ".join(question.split())
+
     safe_query = anonymize_query(question)
+    anon_id = uuid.uuid4()
+    log_query(safe_query, anon_id)
+
     documents, context = hybrid_retrieve(question, request_id)
 
     if not documents:
