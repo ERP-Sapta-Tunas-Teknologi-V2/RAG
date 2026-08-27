@@ -3,6 +3,7 @@ import time
 from flask import Blueprint, request, jsonify, Response, stream_with_context
 import json
 import uuid
+from threading import Thread
 
 from rag.retriever import hybrid_retrieve
 from rag.chain import generate_answer
@@ -53,6 +54,13 @@ def validate_query(question):
 
     return None
 
+def log_query_background(query, anon_id):
+    try:
+        log_time = log_query(query, anon_id)
+        return log_time
+    except Exception as e:
+        print(f"[LOGGING] failed: {e}")
+
 @chat_bp.route("/chat", methods=["POST"])
 @limiter.limit("10 per minute")
 def chat():
@@ -70,7 +78,12 @@ def chat():
 
     safe_query = anonymize_query(question)
     anon_id = uuid.uuid4()
-    log_query(safe_query, anon_id)
+
+    log_start = time.perf_counter()
+    Thread(target=log_query_background, args=(safe_query, anon_id), daemon=True).start()
+    log_time = time.perf_counter() - log_start
+    with open("log/log_time.txt", "a", encoding="utf-8") as f:
+        f.write(f"[{request_id}] [LOGGING] total={log_time:.3f}s\n")
 
     documents, context = hybrid_retrieve(question, request_id)
 
@@ -133,7 +146,7 @@ def chat():
         log = (
             f"[{request_id}] [LLM] ttft={first_token_time:.3f}s | "
             f"total={llm_time:.3f}s\n"
-            f"[{request_id}] [REQUEST] total={total_time:.3f}s\n"
+            f"[{request_id}] [REQUEST] total={total_time:.3f}s\n\n"
         )
 
         with open("log/log_time.txt", "a", encoding="utf-8") as f:

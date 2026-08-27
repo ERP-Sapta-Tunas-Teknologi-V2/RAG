@@ -73,8 +73,8 @@ def hybrid_retrieve(question: str, request_id: str, candidate_k: int = 10, reran
     total_time = time.perf_counter() - start
 
     log = (
-        f"\n[{request_id}] question='{safe_query}'\n"
-        "[RETRIEVAL] "
+        f"[{request_id}] question='{safe_query}'\n"
+        f"[{request_id}] [RETRIEVAL] "
         f"embedding={embedding_time:.3f}s | "
         f"search={search_time:.3f}s | "
         f"rerank={rerank_time:.3f}s | "
