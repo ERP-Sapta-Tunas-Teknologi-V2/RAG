@@ -227,13 +227,7 @@ Sunday 02:00
 
 # Menjalankan API
 
-Pastikan environment variable Dola Seed telah dikonfigurasi pada `.env`:
-
-```env
-ARK_API_KEY=...
-ARK_BASE_URL=...
-ARK_LLM=...
-```
+Pastikan environment variable telah dikonfigurasi pada `.env`.
 
 Kemudian jalankan Flask:
 
@@ -263,6 +257,8 @@ Response:
 
 ## Postman
 
+### Chat
+
 1. Pilih method `POST`.
 2. Masukkan URL:
 
@@ -281,14 +277,45 @@ http://127.0.0.1:5000/api/chat
 }
 ```
 
-7. Pilih `Send`.
+7. Klik `Send`.
+
+### Export log
+
+1. Pilih method `GET`.
+2. Masukkan URL:
+
+```text
+http://127.0.0.1:5000/api/logs/export
+```
+
+3. Karena fitur export log hanya dibatasi untuk role Marketing dan Product, pilih `Headers` dan masukkan `"X-User-Role"` di `Key` dan `"Marketing"` atau `"Product"` di `Value`.
+
+4. Klik `Send`.
+
+Untuk mem-filter tanggal, masukkan parameter `start` dan/atau `end`.
+
+Format:
+
+```
+http://127.0.0.1:5000/api/logs/export?start=YYYY-MM-DD&end=YYYY-MM-DD
+```
 
 ## cURL
 
+### Chat
+
 ```bash
-curl -X POST http://127.0.0.1:5000/api/chat \
+curl -X POST "http://127.0.0.1:5000/api/chat" \
   -H "Content-Type: application/json" \
   -d "{\"question\":\"...\"}"
+```
+
+### Export log
+
+```bash
+curl -X GET "http://127.0.0.1:5000/api/logs/export" \
+  -H "X-User-Role: Marketing" \
+  -o query_logs.csv
 ```
 
 # API Contract
