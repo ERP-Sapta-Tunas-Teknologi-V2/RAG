@@ -83,7 +83,7 @@ def hybrid_retrieve(question: str, request_id: str, candidate_k: int = 10, reran
         f"total={total_time:.3f}s\n"
     )
 
-    print(log)
+    # print(log)
     with open("log/log_time.txt", "a", encoding="utf-8") as f:
         f.write(log)
 

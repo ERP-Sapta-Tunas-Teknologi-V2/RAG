@@ -10,6 +10,9 @@ from rag.chain import generate_answer
 from utils.extensions import limiter
 from utils.anonymizer import anonymize_query
 from utils.query_logger import log_query
+from session.manager import SessionManager
+
+session_manager = SessionManager()
 
 chat_bp = Blueprint("chat", __name__)
 
@@ -69,12 +72,21 @@ def chat():
 
     data = request.get_json(silent=True) or {}
     question = data.get("question")
+    session_id = data.get("session_id")
 
     error = validate_query(question)
     if error:
         return jsonify({"error": error}), 400
 
     question = " ".join(question.split())
+
+    session, is_new = session_manager.get_or_create(session_id)
+    session_id = session["session_id"]
+    history = session_manager.get_history(session_id, limit=10)
+    session_manager.add_message(session_id, "user", question)
+
+    print(f"[SESSION] id={session_id} new={is_new}")
+    print(f"[SESSION] history={history}")
 
     safe_query = anonymize_query(question)
     anon_id = uuid.uuid4()
@@ -90,7 +102,10 @@ def chat():
     if not documents:
         answer = "Informasi tidak ditemukan dalam knowledge base. Silakan hubungi kontak kami."
 
+        session_manager.add_message(session_id, "assistant", answer)
+
         return jsonify({
+            "session_id": session_id,
             "question": question,
             "answer": answer,
             "context": "",
@@ -111,7 +126,12 @@ def chat():
 #     })
 
     def generate():
-        yield f"data: {json.dumps({'type': 'metadata', 'sources': sources, 'fallback': False}, ensure_ascii=False)}\n\n"
+        yield f"data: {json.dumps({
+            'type': 'metadata',
+            'session_id': session_id,
+            'sources': sources,
+            'fallback': False
+        }, ensure_ascii=False)}\n\n"
 
         llm_start = time.perf_counter()
         first_token_time = None
@@ -143,6 +163,8 @@ def chat():
 
         answer = "".join(full_answer)
 
+        session_manager.add_message(session_id, "assistant", answer)
+
         log = (
             f"[{request_id}] [LLM] ttft={first_token_time:.3f}s | "
             f"total={llm_time:.3f}s\n"
@@ -152,9 +174,9 @@ def chat():
         with open("log/log_time.txt", "a", encoding="utf-8") as f:
             f.write(log)
 
-        print("\n=== FULL ANSWER ===")
-        print(answer)
-        print("=====================\n")
+        # print("\n=== FULL ANSWER ===")
+        # print(answer)
+        # print("=====================\n")
 
         yield f"data: {json.dumps({'type': 'answer', 'content': answer}, ensure_ascii=False)}\n\n"
         yield f"data: {json.dumps({'type': 'done'})}\n\n"

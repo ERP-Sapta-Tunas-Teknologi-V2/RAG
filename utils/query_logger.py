@@ -13,5 +13,5 @@ def log_query(query, anon_id):
         ).execute()
     except Exception as e:
         print(f"[LOGGING] failed: {e}")
-    finally:
-        print(f"[LOGGING] background={time.perf_counter() - start:.3f}s")
+    # finally:
+    #     print(f"[LOGGING] background={time.perf_counter() - start:.3f}s")
