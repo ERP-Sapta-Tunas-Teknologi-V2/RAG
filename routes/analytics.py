@@ -1,7 +1,9 @@
 from flask import Blueprint, Response, request
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
+
 from sync.export_logs import export_query_logs
+from utils.permissions import require_role
 
 analytics_bp = Blueprint("analytics", __name__)
 
@@ -17,6 +19,7 @@ def parse_date(value):
         raise ValueError("date must use YYYY-MM-DD format")
 
 @analytics_bp.route("/logs/export", methods=["GET"])
+@require_role("Marketing", "Product")
 def export_logs():
     try:
         start = parse_date(request.args.get("start"))

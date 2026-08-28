@@ -181,12 +181,12 @@ create table public.query_logs (
     anon_id uuid not null
 );
 
-grant insert, select
-on table public.query_logs 
+grant insert
+on table public.query_logs
 to anon;
 
-grant usage, select 
-on sequence public.query_logs_id_seq 
+grant usage, select
+on sequence public.query_logs_id_seq
 to anon;
 
 create policy "Allow anon insert query logs"
@@ -194,12 +194,6 @@ on public.query_logs
 for insert
 to anon
 with check (true);
-
-create policy "Allow anon select query logs"
-on public.query_logs
-for select
-to anon
-using (true);
 
 create or replace function public.delete_expired_query_logs()
 returns integer
@@ -227,3 +221,10 @@ on public.query_logs(timestamp);
 
 alter database postgres
 set timezone = 'Asia/Jakarta';
+
+grant select
+on table public.query_logs
+to service_role;
+
+alter table public.query_logs
+enable row level security;

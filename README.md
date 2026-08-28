@@ -761,6 +761,14 @@ Total retrieval latency
 
 Tujuannya untuk mengetahui tahap mana yang menjadi bottleneck sebelum API digunakan pada FE widget production.
 
+# Test
+
+Jalankan file test dalam folder `tests/` dengan command:
+
+```
+pytest tests/[nama file].py -v
+```
+
 # Database
 
 Tabel utama:
