@@ -18,6 +18,8 @@ def export_query_logs(start_date=None, end_date=None):
     result = query.execute()
 
     output = io.StringIO()
+    output.write("\ufeff")
+    
     writer = csv.writer(output)
     writer.writerow(["id", "query", "timestamp"])
 

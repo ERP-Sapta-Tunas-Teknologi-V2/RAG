@@ -34,7 +34,8 @@ def export_logs():
 
         return Response(
             csv_data,
-            mimetype="text/csv",
+            status=200,
+            content_type="text/csv; charset=utf-8",
             headers={
                 "Content-Disposition": "attachment; filename=query_logs.csv"
             }
