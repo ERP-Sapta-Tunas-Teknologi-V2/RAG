@@ -11,6 +11,7 @@ from utils.extensions import limiter
 from utils.anonymizer import anonymize_query
 from utils.query_logger import log_query
 from session.manager import SessionManager
+from session.contextualizer import contextualize_question
 
 session_manager = SessionManager()
 
@@ -83,10 +84,18 @@ def chat():
     session, is_new = session_manager.get_or_create(session_id)
     session_id = session["session_id"]
     history = session_manager.get_history(session_id, limit=10)
+
+    if history:
+        contextual_question = contextualize_question(question, history)
+    else:
+        contextual_question = question
+
     session_manager.add_message(session_id, "user", question)
 
-    print(f"[SESSION] id={session_id} new={is_new}")
+    print(f"\n[SESSION] id={session_id} new={is_new}")
     print(f"[SESSION] history={history}")
+    print(f"[SESSION] question={question}")
+    print(f"[SESSION] contextual_question={contextual_question}")
 
     safe_query = anonymize_query(question)
     anon_id = uuid.uuid4()
@@ -97,7 +106,7 @@ def chat():
     with open("log/log_time.txt", "a", encoding="utf-8") as f:
         f.write(f"[{request_id}] [LOGGING] total={log_time:.3f}s\n")
 
-    documents, context = hybrid_retrieve(question, request_id)
+    documents, context = hybrid_retrieve(contextual_question, request_id)
 
     if not documents:
         answer = "Informasi tidak ditemukan dalam knowledge base. Silakan hubungi kontak kami."

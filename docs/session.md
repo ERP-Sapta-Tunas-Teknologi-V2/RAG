@@ -345,9 +345,41 @@ Pertanyaan kedua membutuhkan context dari pertanyaan dan jawaban sebelumnya.
 
 ## 6.2 Contextual Question
 
-Application dapat mengubah follow-up question menjadi query yang lebih lengkap sebelum retrieval.
+Apabila session memiliki conversation history, application dapat menggunakan
+LLM contextualizer untuk mengubah current question menjadi standalone question.
 
-Contextual question digunakan untuk proses retrieval.
+Contextualizer hanya digunakan untuk membantu retrieval.
+
+Flow:
+
+```text
+Conversation History
+        +
+Current Question
+        ↓
+Contextualizer
+        ↓
+Standalone Question
+        ↓
+RAG Retrieval
+```
+
+Standalone question digunakan untuk retrieval.
+
+Current question asli tetap digunakan sebagai pertanyaan user untuk final answer.
+
+```text
+Contextual Question
+→ Retrieval
+
+Original Question
+→ Final LLM
+```
+
+Contextualizer tidak boleh menjawab pertanyaan.
+
+Apabila session tidak memiliki history, contextualization tidak diperlukan
+dan current question langsung digunakan untuk retrieval.
 
 ## 6.3 RAG and Conversation History
 
