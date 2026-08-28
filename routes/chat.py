@@ -141,12 +141,12 @@ def chat():
 
         for chunk in stream:
             # Ollama
-            # content = chunk.content
+            content = chunk.content
 
             # API
-            if not chunk.choices:
-                continue
-            content = getattr(chunk.choices[0].delta, "content", None)
+            # if not chunk.choices:
+            #     continue
+            # content = getattr(chunk.choices[0].delta, "content", None)
 
             if not content:
                 continue
