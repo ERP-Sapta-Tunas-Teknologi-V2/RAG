@@ -16,8 +16,11 @@ def create_app():
         return send_from_directory("static", "index.html")
 
     @app.errorhandler(429)
-    def ratelimit_handler(e):
-        return jsonify({"error": "rate limit exceeded"}), 429
+    def handle_rate_limit(e):
+        return jsonify({
+            "error": "rate limit exceeded",
+            "message": "Terlalu banyak request. Silakan coba lagi nanti."
+        }), 429
 
     return app
 
