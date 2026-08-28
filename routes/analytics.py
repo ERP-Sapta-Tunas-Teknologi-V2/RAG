@@ -1,9 +1,10 @@
-from flask import Blueprint, Response, request
+from flask import Blueprint, Response, request, jsonify
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from sync.export_logs import export_query_logs
 from utils.permissions import require_role
+from utils.supabase_admin import supabase_admin
 
 analytics_bp = Blueprint("analytics", __name__)
 
@@ -46,3 +47,19 @@ def export_logs():
 
     except ValueError as e:
         return {"error": str(e)}, 400
+
+@analytics_bp.route("/logs/top-faq", methods=["GET"])
+@require_role("Marketing", "Product")
+def top_faq():
+    days = request.args.get("days", 30, type=int)
+    limit = request.args.get("limit", 5, type=int)
+
+    result = supabase_admin.rpc(
+        "get_top_faq",
+        {
+            "days": days,
+            "result_limit": limit
+        }
+    ).execute()
+
+    return jsonify(result.data or [])

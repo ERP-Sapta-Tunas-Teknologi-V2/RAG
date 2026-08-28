@@ -228,3 +228,35 @@ to service_role;
 
 alter table public.query_logs
 enable row level security;
+
+create or replace function public.get_top_faq(
+    days int default 30,
+    result_limit int default 5
+)
+returns table (
+    query text,
+    total_queries bigint,
+    last_asked timestamptz
+)
+language sql
+security definer
+set search_path = public
+as $$
+    select
+        q.query,
+        count(*) as total_queries,
+        max(q.timestamp) as last_asked
+    from public.query_logs q
+    where q.timestamp >= now() - make_interval(days => days)
+    group by q.query
+    order by total_queries desc
+    limit result_limit;
+$$;
+
+revoke execute
+on function public.get_top_faq(int, int)
+from anon, authenticated;
+
+grant execute
+on function public.get_top_faq(int, int)
+to service_role;
