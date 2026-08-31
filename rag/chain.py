@@ -29,10 +29,10 @@ Aturan:
 9. Berikan jawaban secara singkat, jelas, dan langsung pada inti pertanyaan.
 
 Context:
-{context}
+"{context}"
 
 Pertanyaan pengguna:
-{question}
+"{question}"
 
 Jawaban:
 """)

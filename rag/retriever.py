@@ -42,12 +42,7 @@ def hybrid_retrieve(question: str, request_id: str, candidate_k: int = 10, reran
         documents.append(document)
 
         with open("log/log_retrieval-docs.txt", "a", encoding="utf-8") as f:
-            f.write(
-                f"\n--- DOCUMENT ---\n"
-                f"{document.page_content}\n\n"
-                f"METADATA:\n"
-                f"{document.metadata}\n"
-            )
+            f.write(f"METADATA: source={metadata.get('source')} page={metadata.get('page')}\n")
 
     rerank_start = time.perf_counter()
     documents = rerank(question, documents, top_k=rerank_k)

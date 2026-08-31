@@ -85,20 +85,20 @@ def chat():
     session_id = session["session_id"]
     history = session_manager.get_history(session_id, limit=10)
 
-    if history:
-        contextual_question = contextualize_question(question, history)
-    else:
-        contextual_question = question
-
-    session_manager.add_message(session_id, "user", question)
-
-    print(f"\n[SESSION] id={session_id} new={is_new}")
-    print(f"[SESSION] history={history}")
-    print(f"[SESSION] question={question}")
-    print(f"[SESSION] contextual_question={contextual_question}")
-
     safe_query = anonymize_query(question)
     anon_id = uuid.uuid4()
+
+    if history:
+        contextual_question = contextualize_question(safe_query, history)
+    else:
+        contextual_question = safe_query
+
+    session_manager.add_message(session_id, "user", safe_query)
+
+    print(f"\n[{session_id[:8]}] id={session_id} new={is_new}")
+    print(f"[{session_id[:8]}] history={history}")
+    print(f"[{session_id[:8]}] question={safe_query}")
+    print(f"[{session_id[:8]}] contextual_question={contextual_question}")
 
     log_start = time.perf_counter()
     Thread(target=log_query_background, args=(safe_query, anon_id), daemon=True).start()
@@ -110,12 +110,10 @@ def chat():
 
     if not documents:
         answer = "Informasi tidak ditemukan dalam knowledge base. Silakan hubungi kontak kami."
-
         session_manager.add_message(session_id, "assistant", answer)
-
         return jsonify({
             "session_id": session_id,
-            "question": question,
+            "question": safe_query,
             "answer": answer,
             "context": "",
             "sources": [],
@@ -125,9 +123,9 @@ def chat():
     sources = [document.metadata for document in documents]
 
 # Non-Stream
-#     answer = generate_answer(question, context)
+#     answer = generate_answer(safe_query, context)
 #     return jsonify({
-#         "question": question,
+#         "question": safe_query,
 #         "answer": answer,
 #         "context": context,
 #         "sources": sources,
@@ -146,7 +144,7 @@ def chat():
         first_token_time = None
         full_answer = []
 
-        stream = generate_answer(question, context)
+        stream = generate_answer(safe_query, context)
 
         for chunk in stream:
             # Ollama
