@@ -97,13 +97,42 @@ Request yang ditolak tidak boleh menjalankan proses tersebut.
 
 ## Testing
 
-Test dilakukan dengan mengirimkan lebih dari 10 request dalam satu menit dari IP yang sama.
+### Burst Test
+
+Test dilakukan dengan mengirimkan 12 request secara concurrent dari IP yang sama dalam waktu yang hampir bersamaan.
 
 Expected:
 
 ```text
 Request 1–10  → HTTP 200
-Request 11+   → HTTP 429
+Request 11–12 → HTTP 429
+```
+
+Expected total:
+
+```text
+HTTP 200 → 10
+HTTP 429 → 2
+```
+
+Request yang mendapatkan HTTP 429 tidak boleh menjalankan proses chatbot seperti:
+
+```text
+Contextualizer
+→ Embedding
+→ Retrieval
+→ Reranking
+→ LLM
+```
+
+### Rate Limit Reset
+
+Setelah rate-limit window berakhir, request baru dari IP yang sama harus dapat diproses kembali.
+
+Expected:
+
+```text
+After window reset → HTTP 200
 ```
 
 ## Production Consideration
