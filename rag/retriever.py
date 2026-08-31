@@ -7,7 +7,7 @@ from rag.reranker import rerank
 from utils.supabase_client import supabase
 from utils.anonymizer import anonymize_query
 
-RERANK_THRESHOLD = 5.0
+RERANK_THRESHOLD = 3.0
 
 def hybrid_retrieve(question: str, request_id: str, candidate_k: int = 10, rerank_k: int = 3) -> tuple[list[Document], str]:
     start = time.perf_counter()

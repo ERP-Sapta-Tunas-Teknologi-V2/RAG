@@ -1,6 +1,9 @@
 from langchain_core.documents import Document
 from transformers import AutoTokenizer
 import hashlib
+import re
+
+from utils.injection_patterns import INJECTION_PATTERNS
 
 LOCAL_EMB_MODEL = "BAAI/bge-m3"
 
@@ -8,6 +11,12 @@ class StructureAwareChunker:
     def __init__(self, max_tokens=1000):
         self.tokenizer = AutoTokenizer.from_pretrained(LOCAL_EMB_MODEL)
         self.max_tokens = max_tokens
+
+    def _scan_injection(self, content):
+        for pattern in INJECTION_PATTERNS:
+            if re.search(pattern, content, re.IGNORECASE):
+                content = re.sub(pattern, "[REDACTED]", content, flags=re.IGNORECASE)
+        return content
 
     def _extract_item_text(self, item, doc):
         text = getattr(item, "text", None) or getattr(item, "orig", None)
@@ -212,13 +221,13 @@ class StructureAwareChunker:
 
     def _make_chunk(self, blocks, heading):
         content = "\n\n".join(block["text"] for block in blocks)
+        content = self._scan_injection(content)
+        print(content)
 
         if heading:
             content = f"{heading}\n\n{content}"
 
-        tokens = len(
-            self.tokenizer.encode(content, add_special_tokens=False)
-        )
+        tokens = len(self.tokenizer.encode(content, add_special_tokens=False))
 
         if tokens > self.max_tokens:
             print(
@@ -235,9 +244,7 @@ class StructureAwareChunker:
         return {
             "content": content,
             "pages": pages,
-            "fingerprint": hashlib.sha256(
-                content.encode("utf-8")
-            ).hexdigest()
+            "fingerprint": hashlib.sha256(content.encode("utf-8")).hexdigest()
         }
 
     def _extract_section_number(self, title):
