@@ -51,7 +51,17 @@ def chat():
     request_id = uuid.uuid4().hex[:8]
     request_start = time.perf_counter()
 
-    data = request.get_json(silent=True) or {}
+    print("CONTENT TYPE:", request.content_type)
+    print("RAW BODY:", request.get_data(as_text=True))
+    print("JSON:", request.get_json(silent=True))
+
+    data = request.get_json(silent=True)
+
+    if data is None:
+        return jsonify({"error": "invalid JSON"}), 400
+    if not isinstance(data, dict):
+        return jsonify({"error": "request body must be an object"}), 400
+
     question = data.get("question")
     session_id = data.get("session_id")
 

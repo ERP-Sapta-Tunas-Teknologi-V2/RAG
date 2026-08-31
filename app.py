@@ -26,6 +26,13 @@ def create_app():
             "message": "Terlalu banyak request. Silakan coba lagi nanti."
         }), 429
 
+    @app.after_request
+    def security_headers(response):
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        return response
+
     return app
 
 app = create_app()
