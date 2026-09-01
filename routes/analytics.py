@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 
 from sync.export_logs import export_query_logs
 from utils.permissions import require_role
-from utils.supabase_admin import supabase_admin
+from utils.supabase_admin import supabase
 
 analytics_bp = Blueprint("analytics", __name__)
 
@@ -54,7 +54,7 @@ def top_faq():
     days = request.args.get("days", 30, type=int)
     limit = request.args.get("limit", 5, type=int)
 
-    result = supabase_admin.rpc(
+    result = supabase.rpc(
         "get_top_faq",
         {
             "days": days,

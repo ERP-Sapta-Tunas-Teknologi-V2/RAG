@@ -1,13 +1,11 @@
 import time
 import voyageai
 from transformers import AutoTokenizer
-from supabase.client import create_client
 from langchain_voyageai import VoyageAIEmbeddings
 
 from config.settings import SUPABASE_URL, SUPABASE_KEY, VOYAGE_EMB_MODEL, LOCAL_EMB_MODEL
 from rag.embeddings import embeddings
-
-supabase_client = create_client(SUPABASE_URL, SUPABASE_KEY)
+from utils.supabase_client import supabase
 
 MAX_RPM = 3
 MAX_TPM = 10_000
@@ -164,7 +162,7 @@ def add_documents(chunks):
             raise ValueError("All chunks must belong to the same document.")
 
         existing = (
-            supabase_client
+            supabase
             .table("documents")
             .select("id, fingerprint")
             .eq("document_id", document_id)
@@ -226,7 +224,7 @@ def add_documents(chunks):
             })
 
         try:
-            supabase_client \
+            supabase \
                 .table("documents") \
                 .upsert(
                     rows,
@@ -255,7 +253,7 @@ def add_documents(chunks):
         ]
 
         existing_rows = (
-            supabase_client
+            supabase
             .table("documents")
             .select("id, chunk_index")
             .eq("document_id", document_id)
@@ -270,7 +268,7 @@ def add_documents(chunks):
 
         if stale_ids:
             try:
-                supabase_client \
+                supabase \
                     .table("documents") \
                     .delete() \
                     .in_("id", stale_ids) \
@@ -316,7 +314,7 @@ def add_documents(chunks):
 
 def get_document_ids():
     result = (
-        supabase_client
+        supabase
         .table("documents")
         .select("document_id")
         .execute()
@@ -325,7 +323,7 @@ def get_document_ids():
 
 def delete_document(document_id):
     (
-        supabase_client
+        supabase
         .table("documents")
         .delete()
         .eq("document_id", document_id)

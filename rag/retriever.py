@@ -1,4 +1,3 @@
-from supabase import create_client
 from langchain_core.documents import Document
 import time
 
