@@ -63,3 +63,36 @@ def top_faq():
     ).execute()
 
     return jsonify(result.data or [])
+
+@analytics_bp.route("/cost/daily", methods=["GET"])
+def daily_cost():
+    report_date = request.args.get("date")
+    params = {}
+
+    if report_date:
+        params["report_date"] = report_date
+
+    result = (
+        supabase
+        .rpc("get_daily_cost_report", params)
+        .execute()
+    )
+
+    data = result.data[0] if result.data else {}
+    return jsonify(data)
+
+@analytics_bp.route("/cost/weekly", methods=["GET"])
+def weekly_cost():
+    end_date = request.args.get("date")
+    params = {}
+
+    if end_date:
+        params["end_date"] = end_date
+
+    result = (
+        supabase
+        .rpc("get_weekly_cost_report", params)
+        .execute()
+    )
+
+    return jsonify({"data": result.data or []})

@@ -1,5 +1,3 @@
--- TABLE: documents
-
 create extension if not exists vector;
 
 drop table if exists public.documents;
@@ -170,8 +168,6 @@ for delete
 to anon
 using (true);
 
--- TABLE: query_logs
-
 drop table if exists public.query_logs;
 
 create table public.query_logs (
@@ -296,11 +292,213 @@ create table if not exists public.index_usage_logs (
     created_at timestamptz default now()
 );
 
-create index if not exists idx_index_usage_logs_request_id
-on public.index_usage_logs(request_id);
+create index if not exists idx_index_usage_logs_id
+on public.index_usage_logs(id);
 
 create index if not exists idx_index_usage_logs_created_at
 on public.index_usage_logs(created_at);
 
 grant insert on table public.index_usage_logs to service_role;
 grant usage, select on all sequences in schema public to service_role;
+
+create or replace function public.get_daily_cost_report(
+    report_date date default current_date
+)
+returns table (
+    total_cost numeric,
+    embedding_cost numeric,
+    llm_cost numeric,
+    total_tokens bigint,
+    embedding_tokens bigint,
+    llm_input_tokens bigint,
+    llm_output_tokens bigint,
+    chat_requests bigint,
+    index_runs bigint
+)
+language sql
+security definer
+set search_path = public
+as $$
+    select
+        coalesce((
+            select sum(total_cost)
+            from public.chat_usage_logs
+            where created_at >= report_date
+              and created_at < report_date + interval '1 day'
+        ), 0)
+        +
+        coalesce((
+            select sum(embedding_cost)
+            from public.index_usage_logs
+            where created_at >= report_date
+              and created_at < report_date + interval '1 day'
+        ), 0) as total_cost,
+
+        coalesce((
+            select sum(embedding_cost)
+            from public.chat_usage_logs
+            where created_at >= report_date
+              and created_at < report_date + interval '1 day'
+        ), 0)
+        +
+        coalesce((
+            select sum(embedding_cost)
+            from public.index_usage_logs
+            where created_at >= report_date
+              and created_at < report_date + interval '1 day'
+        ), 0) as embedding_cost,
+
+        coalesce((
+            select sum(llm_total_cost)
+            from public.chat_usage_logs
+            where created_at >= report_date
+              and created_at < report_date + interval '1 day'
+        ), 0) as llm_cost,
+
+        coalesce((
+            select sum(total_tokens)
+            from public.chat_usage_logs
+            where created_at >= report_date
+              and created_at < report_date + interval '1 day'
+        ), 0)
+        +
+        coalesce((
+            select sum(embedding_tokens)
+            from public.index_usage_logs
+            where created_at >= report_date
+              and created_at < report_date + interval '1 day'
+        ), 0) as total_tokens,
+
+        coalesce((
+            select sum(embedding_tokens)
+            from public.chat_usage_logs
+            where created_at >= report_date
+              and created_at < report_date + interval '1 day'
+        ), 0)
+        +
+        coalesce((
+            select sum(embedding_tokens)
+            from public.index_usage_logs
+            where created_at >= report_date
+              and created_at < report_date + interval '1 day'
+        ), 0) as embedding_tokens,
+
+        coalesce((
+            select sum(llm_input_tokens)
+            from public.chat_usage_logs
+            where created_at >= report_date
+              and created_at < report_date + interval '1 day'
+        ), 0) as llm_input_tokens,
+
+        coalesce((
+            select sum(llm_output_tokens)
+            from public.chat_usage_logs
+            where created_at >= report_date
+              and created_at < report_date + interval '1 day'
+        ), 0) as llm_output_tokens,
+
+        coalesce((
+            select count(*)
+            from public.chat_usage_logs
+            where created_at >= report_date
+              and created_at < report_date + interval '1 day'
+        ), 0) as chat_requests,
+
+        coalesce((
+            select count(*)
+            from public.index_usage_logs
+            where created_at >= report_date
+              and created_at < report_date + interval '1 day'
+        ), 0) as index_runs;
+$$;
+
+create or replace function public.get_weekly_cost_report(
+    end_date date default current_date
+)
+returns table (
+    report_date date,
+    total_cost numeric,
+    embedding_cost numeric,
+    llm_cost numeric,
+    total_tokens bigint,
+    chat_requests bigint,
+    index_runs bigint
+)
+language sql
+security definer
+set search_path = public
+as $$
+    with dates as (
+        select generate_series(
+            end_date - interval '6 days',
+            end_date,
+            interval '1 day'
+        )::date as report_date
+    ),
+
+    chat as (
+        select
+            created_at::date as report_date,
+            coalesce(sum(total_cost), 0) as total_cost,
+            coalesce(sum(embedding_cost), 0) as embedding_cost,
+            coalesce(sum(llm_total_cost), 0) as llm_cost,
+            coalesce(sum(total_tokens), 0) as total_tokens,
+            count(*) as chat_requests
+        from public.chat_usage_logs
+        where created_at >= end_date - interval '6 days'
+          and created_at < end_date + interval '1 day'
+        group by created_at::date
+    ),
+
+    indexing as (
+        select
+            created_at::date as report_date,
+            coalesce(sum(embedding_cost), 0) as embedding_cost,
+            coalesce(sum(embedding_tokens), 0) as embedding_tokens,
+            count(*) as index_runs
+        from public.index_usage_logs
+        where created_at >= end_date - interval '6 days'
+          and created_at < end_date + interval '1 day'
+        group by created_at::date
+    )
+
+    select
+        d.report_date,
+
+        coalesce(c.total_cost, 0)
+        + coalesce(i.embedding_cost, 0) as total_cost,
+
+        coalesce(c.embedding_cost, 0)
+        + coalesce(i.embedding_cost, 0) as embedding_cost,
+
+        coalesce(c.llm_cost, 0) as llm_cost,
+
+        coalesce(c.total_tokens, 0)
+        + coalesce(i.embedding_tokens, 0) as total_tokens,
+
+        coalesce(c.chat_requests, 0) as chat_requests,
+        coalesce(i.index_runs, 0) as index_runs
+
+    from dates d
+    left join chat c
+        on c.report_date = d.report_date
+    left join indexing i
+        on i.report_date = d.report_date
+    order by d.report_date;
+$$;
+
+revoke execute
+on function public.get_daily_cost_report(date)
+from anon, authenticated;
+
+revoke execute
+on function public.get_weekly_cost_report(date)
+from anon, authenticated;
+
+grant execute
+on function public.get_daily_cost_report(date)
+to service_role;
+
+grant execute
+on function public.get_weekly_cost_report(date)
+to service_role;
