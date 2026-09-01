@@ -1,20 +1,38 @@
 from langchain_core.documents import Document
 import time
 
-from rag.embeddings import embeddings
+from rag.embeddings import (
+    # embeddings, count_embedding_tokens,  # Ollama
+    get_embedding_tokens, embed_query_with_usage, client  # Voyage
+)
 from rag.reranker import rerank
 from utils.supabase_client import supabase
 from utils.anonymizer import anonymize_query
+from config.settings import LOCAL_EMB_MODEL, VOYAGE_EMB_MODEL
 
 RERANK_THRESHOLD = 3.0
 
-def hybrid_retrieve(question: str, request_id: str, candidate_k: int = 10, rerank_k: int = 3) -> tuple[list[Document], str]:
+def hybrid_retrieve(
+    question: str,
+    request_id: str,
+    candidate_k: int = 10,
+    rerank_k: int = 3
+) -> tuple[list[Document], str, int]:
+
     start = time.perf_counter()
-
     embedding_start = time.perf_counter()
-    query_embedding = embeddings.embed_query(question)
-    embedding_time = time.perf_counter() - embedding_start
 
+    # Ollama
+    # embedding_model = LOCAL_EMB_MODEL
+    # embedding_tokens = count_embedding_tokens(question)
+    # query_embedding = embeddings.embed_query(question)
+
+    # Voyage
+    embedding_model = VOYAGE_EMB_MODEL
+    query_embedding = embed_query_with_usage(question)
+    embedding_tokens = get_embedding_tokens()
+
+    embedding_time = time.perf_counter() - embedding_start
     search_start = time.perf_counter()
 
     result = supabase.rpc("hybrid_search", {
@@ -70,6 +88,7 @@ def hybrid_retrieve(question: str, request_id: str, candidate_k: int = 10, reran
         f"[{request_id}] question='{safe_query}'\n"
         f"[{request_id}] [RETRIEVAL] "
         f"embedding={embedding_time:.3f}s | "
+        f"embedding_tokens={embedding_tokens} | "
         f"search={search_time:.3f}s | "
         f"rerank={rerank_time:.3f}s | "
         f"threshold={RERANK_THRESHOLD:.4f} | "
@@ -81,4 +100,4 @@ def hybrid_retrieve(question: str, request_id: str, candidate_k: int = 10, reran
     with open("log/log_time.txt", "a", encoding="utf-8") as f:
         f.write(log)
 
-    return documents, context
+    return documents, context, embedding_tokens, embedding_model
