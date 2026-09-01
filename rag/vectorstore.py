@@ -3,7 +3,7 @@ import voyageai
 from transformers import AutoTokenizer
 from langchain_voyageai import VoyageAIEmbeddings
 
-from config.settings import SUPABASE_URL, SUPABASE_KEY, VOYAGE_EMB_MODEL, LOCAL_EMB_MODEL
+from config.settings import VOYAGE_EMB_MODEL, LOCAL_EMB_MODEL
 from rag.embeddings import embeddings
 from utils.supabase_client import supabase
 
@@ -15,7 +15,7 @@ MAX_RETRIES = 3
 USE_VOYAGE = isinstance(embeddings, VoyageAIEmbeddings)
 
 tokenizer = AutoTokenizer.from_pretrained(
-    f"voyageai/{VOYAGE_EMB_MODEL}" if USE_VOYAGE else "BAAI/bge-m3"
+    f"voyageai/{VOYAGE_EMB_MODEL}" if USE_VOYAGE else f"BAAI/{LOCAL_EMB_MODEL}"
 )
 
 def _count_tokens(text):

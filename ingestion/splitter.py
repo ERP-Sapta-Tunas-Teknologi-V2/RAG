@@ -4,12 +4,11 @@ import hashlib
 import re
 
 from utils.injection_patterns import INJECTION_PATTERNS
-
-LOCAL_EMB_MODEL = "BAAI/bge-m3"
+from config.settings import LOCAL_EMB_MODEL
 
 class StructureAwareChunker:
     def __init__(self, max_tokens=1000):
-        self.tokenizer = AutoTokenizer.from_pretrained(LOCAL_EMB_MODEL)
+        self.tokenizer = AutoTokenizer.from_pretrained(f"BAAI/{LOCAL_EMB_MODEL}")
         self.max_tokens = max_tokens
 
     def _scan_injection(self, content):
