@@ -9,7 +9,7 @@ from rag.retriever import hybrid_retrieve
 from rag.chain import generate_answer
 from utils.extensions import limiter
 from utils.anonymizer import anonymize_query
-from utils.logger import log_query, log_usage
+from utils.logger import log_query, log_chat_usage
 from session.manager import SessionManager
 from session.contextualizer import contextualize_question
 from utils.injection_patterns import INJECTION_PATTERNS
@@ -47,7 +47,7 @@ def log_query_background(query, anon_id):
 
 def log_usage_background(request_id, anon_id, embedding_model, embedding_tokens, llm_input_tokens, llm_output_tokens):
     try:
-        log_usage(
+        log_chat_usage(
             request_id=request_id,
             anon_id=anon_id,
             emb_model=embedding_model,

@@ -1,6 +1,6 @@
 import time
 from utils.supabase_admin import supabase
-from utils.cost_calculator import calculate_cost
+from utils.cost_calculator import calculate_cost, calculate_emb_cost
 
 def log_query(query, anon_id):
     start = time.perf_counter()
@@ -17,7 +17,23 @@ def log_query(query, anon_id):
     # finally:
     #     print(f"[LOGGING] background={time.perf_counter() - start:.3f}s")
 
-def log_usage(
+def log_index_usage(
+    emb_model,
+    embedding_tokens=0,
+):
+    try:
+        emb_cost = calculate_emb_cost(emb_model, embedding_tokens)
+
+        supabase.table("index_usage_logs").insert({
+            "embedding_model": emb_model,
+            "embedding_cost": emb_cost,
+            "embedding_tokens": embedding_tokens,
+        }, returning="minimal").execute()
+
+    except Exception as e:
+        print(f"[USAGE] failed: {e}")
+
+def log_chat_usage(
     request_id,
     anon_id,
     emb_model,
@@ -38,7 +54,7 @@ def log_usage(
         )
         total_cost = emb_cost + llm_cost
 
-        supabase.table("usage_logs").insert({
+        supabase.table("chat_usage_logs").insert({
             "request_id": request_id,
             "anon_id": str(anon_id),
             "total_cost": total_cost,
