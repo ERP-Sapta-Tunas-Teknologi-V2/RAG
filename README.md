@@ -109,7 +109,7 @@ Qwen2.5
 BGE-M3
 ```
 
-Pastikan Ollama sudah terinstall dan dapat dijalankan pada environment development.
+Instal Ollama mengikuti dokumentasi resmi [Ollama Quickstart](https://docs.ollama.com/quickstart).
 
 Model yang digunakan:
 
@@ -211,6 +211,7 @@ Dari Supabase, siapkan:
 
 ```text
 Project URL
+Publishable key
 Secret key
 ```
 
@@ -229,14 +230,13 @@ Buat file:
 Contoh:
 
 ```env
-SUPABASE_URL=https://xxxxx.supabase.co
-SUPABASE_SECRET_KEY=xxxxx
+SUPABASE_URL=PROJECT-URL
+SUPABASE_KEY=PUBLISHABLE-KEY
+SUPABASE_SECRET_KEY=SECRET-KEY
 
 OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_LLM=qwen2.5
 LOCAL_EMB_MODEL=bge-m3
-
-FLASK_ENV=development
 ```
 
 Nama variable harus disesuaikan dengan konfigurasi pada:
@@ -786,6 +786,7 @@ Gunakan environment variables untuk:
 
 ```text
 SUPABASE_URL
+SUPABASE_KEY
 SUPABASE_SECRET_KEY
 OLLAMA_BASE_URL
 OLLAMA_LLM
