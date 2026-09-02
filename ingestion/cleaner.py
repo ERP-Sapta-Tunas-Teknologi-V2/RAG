@@ -27,14 +27,17 @@ def clean_md(markdown):
     return markdown
 
 def preprocessing(path, document_id):
-    if path.suffix.lower() != ".docx":
-        raise ValueError(f"Unsupported file type: {path.suffix}")
+    if path.suffix.lower() == ".docx":
+        with tempfile.TemporaryDirectory() as temp_dir:
+            pdf_path = Path(temp_dir) / f"{document_id}.pdf"
+            docx_to_pdf(path, pdf_path)
+            pages = pdf_to_md(pdf_path)
 
-    with tempfile.TemporaryDirectory() as temp_dir:
-        pdf_path = Path(temp_dir) / f"{document_id}.pdf"
-
-        docx_to_pdf(path, pdf_path)
+    elif path.suffix.lower() == ".pdf":
         pages = pdf_to_md(pdf_path)
+        
+    else:
+        raise ValueError(f"Unsupported file type: {path.suffix}")
 
     print("Cleaning .md")
     for page in pages:
