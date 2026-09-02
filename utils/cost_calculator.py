@@ -1,6 +1,7 @@
 EMB_PRICING_PER_MILLION_TOKENS = {
     "bge-m3": {"embedding": 0},
-    "voyage-4-large": {"embedding": 0.12}
+    "voyage-4-large": {"embedding": 0.12},
+    "voyage-4-lite": {"embedding": 0.02},
 }
 
 LLM_PRICING_PER_MILLION_TOKENS = {

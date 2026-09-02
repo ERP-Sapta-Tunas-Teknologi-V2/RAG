@@ -5,6 +5,7 @@ from zoneinfo import ZoneInfo
 from sync.export_logs import export_query_logs
 from utils.permissions import require_role
 from utils.supabase_admin import supabase
+from utils.budget_monitor import check_budget
 
 analytics_bp = Blueprint("analytics", __name__)
 
@@ -96,3 +97,7 @@ def weekly_cost():
     )
 
     return jsonify({"data": result.data or []})
+
+@analytics_bp.route("/cost/budget", methods=["GET"])
+def cost_budget():
+    return jsonify(check_budget())
