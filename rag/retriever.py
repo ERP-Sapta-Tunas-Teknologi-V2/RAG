@@ -1,36 +1,49 @@
 from langchain_core.documents import Document
 import time
+import re
 
 from rag.embeddings import (
-    # embeddings, count_embedding_tokens,  # Ollama
-    get_embedding_tokens, embed_query_with_usage, client  # Voyage
+    embeddings, count_embedding_tokens,  # Ollama
+    # get_embedding_tokens, embed_query_with_usage, client  # Voyage
 )
 from rag.reranker import rerank
 from utils.supabase_client import supabase
 from utils.anonymizer import anonymize_query
 from config.settings import LOCAL_EMB_MODEL, VOYAGE_EMB_MODEL
 
-RERANK_THRESHOLD = 3.0
+RERANK_THRESHOLD = 0.0
+
+TERM_MAP = {
+    "STT": "Sapta Tunas Teknologi",
+}
+
+def expand_query(query):
+    for abbr, full in TERM_MAP.items():
+        pattern = rf"\b(?:{re.escape(abbr)}|{re.escape(full)})\b"
+        query = re.sub(pattern, f"{abbr} {full}", query, flags=re.I)
+    return query
 
 def hybrid_retrieve(
     question: str,
     request_id: str,
-    candidate_k: int = 10,
+    candidate_k: int = 3,
     rerank_k: int = 3
 ) -> tuple[list[Document], str, int]:
 
     start = time.perf_counter()
     embedding_start = time.perf_counter()
 
+    question = expand_query(question)
+
     # Ollama
-    # embedding_model = LOCAL_EMB_MODEL
-    # embedding_tokens = count_embedding_tokens(question)
-    # query_embedding = embeddings.embed_query(question)
+    embedding_model = LOCAL_EMB_MODEL
+    embedding_tokens = count_embedding_tokens(question)
+    query_embedding = embeddings.embed_query(question)
 
     # Voyage
-    embedding_model = VOYAGE_EMB_MODEL
-    query_embedding = embed_query_with_usage(question)
-    embedding_tokens = get_embedding_tokens()
+    # embedding_model = VOYAGE_EMB_MODEL
+    # query_embedding = embed_query_with_usage(question)
+    # embedding_tokens = get_embedding_tokens()
 
     embedding_time = time.perf_counter() - embedding_start
     search_start = time.perf_counter()
@@ -62,22 +75,22 @@ def hybrid_retrieve(
             f.write(f"METADATA: source={metadata.get('source')} page={metadata.get('page')}\n")
 
     rerank_start = time.perf_counter()
-    documents = rerank(question, documents, top_k=rerank_k)
+    # documents = rerank(question, documents, top_k=rerank_k)
     rerank_time = time.perf_counter() - rerank_start
 
-    with open("log/log_retrieval-docs.txt", "a", encoding="utf-8") as f:
-        f.write("\n\n=== RERANK SCORES ===\n")
-        for document in documents:
-            f.write(
-                f"score={document.metadata['rerank_score']:.4f} | "
-                f"source={document.metadata.get('source')} | "
-                f"page={document.metadata.get('page')}\n"
-            )
+    # with open("log/log_retrieval-docs.txt", "a", encoding="utf-8") as f:
+    #     f.write("\n\n=== RERANK SCORES ===\n")
+    #     for document in documents:
+    #         f.write(
+    #             f"score={document.metadata['rerank_score']:.4f} | "
+    #             f"source={document.metadata.get('source')} | "
+    #             f"page={document.metadata.get('page')}\n"
+    #         )
 
     documents = [
         document
         for document in documents
-        if document.metadata["rerank_score"] >= RERANK_THRESHOLD
+        # if document.metadata["rerank_score"] >= RERANK_THRESHOLD
     ]
 
     context = "\n\n".join(document.page_content for document in documents)

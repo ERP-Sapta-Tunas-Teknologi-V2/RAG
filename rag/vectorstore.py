@@ -3,8 +3,8 @@ import voyageai
 
 from config.settings import VOYAGE_EMB_MODEL
 from rag.embeddings import (
-    # embeddings, count_embedding_tokens,  # Ollama
-    count_embedding_tokens, embed_text_with_usage  # Voyage
+    embeddings, count_embedding_tokens,  # Ollama
+    # count_embedding_tokens, embed_text_with_usage  # Voyage
 )
 from utils.supabase_client import supabase
 from utils.logger import log_index_usage
@@ -13,7 +13,7 @@ MAX_RPM = 3
 MAX_TPM = 10_000
 TARGET_BATCH_TOKENS = 9_000
 MAX_RETRIES = 3
-USE_VOYAGE = True
+USE_VOYAGE = False
 
 def _count_tokens(text):
     return count_embedding_tokens(text)
@@ -142,7 +142,8 @@ def _embed_batch(texts, batch_number, rate_limiter):
                 f"to {'Voyage' if USE_VOYAGE else 'Ollama'}..."
             )
 
-            vectors = embed_text_with_usage(texts)
+            vectors = embeddings.embed_documents(texts)  # Ollama
+            # vectors = embed_text_with_usage(texts)  # Voyage
 
             if USE_VOYAGE:
                 rate_limiter.record(token_count)
