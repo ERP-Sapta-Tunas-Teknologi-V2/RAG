@@ -1,15 +1,10 @@
-from pathlib import Path
-from langchain_core.documents import Document
-from langchain_community.document_loaders import TextLoader, PyPDFLoader, Docx2txtLoader
+from docling.document_converter import DocumentConverter, InputFormat
 
-def load_document(file_path: str) -> list[Document]:
-    path = Path(file_path)
-    extension = path.suffix.lower()
+converter = DocumentConverter()
 
-    if extension == ".txt": loader = TextLoader(str(path), encoding="utf-8")
-    elif extension == ".pdf": loader = PyPDFLoader(str(path))
-    elif extension == ".docx": loader = Docx2txtLoader(str(path))
-    else: raise ValueError(f"Unsupported file type: {extension}")
-
-    documents = loader.load()
+def load_markdown(pages):
+    documents = []
+    for page in pages:
+        result = converter.convert_string(page["markdown"], format=InputFormat.MD)
+        documents.append({"page": page["page"], "document": result.document})
     return documents
