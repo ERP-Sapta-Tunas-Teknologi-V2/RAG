@@ -120,24 +120,24 @@ form.addEventListener("submit", async e => {
                     answer = data.content;
                 }
 
-                if (data.type === "done") {
-                    if (sources.length) {
-                        const sourceEl = document.createElement("div");
-                        sourceEl.className = "sources";
+                // if (data.type === "done") {
+                //     if (sources.length) {
+                //         const sourceEl = document.createElement("div");
+                //         sourceEl.className = "sources";
 
-                        const title = document.createElement("b");
-                        title.textContent = "Sumber:";
-                        sourceEl.appendChild(title);
+                //         const title = document.createElement("b");
+                //         title.textContent = "Sumber:";
+                //         sourceEl.appendChild(title);
 
-                        sources.slice(0, 3).forEach(source => {
-                            const item = document.createElement("div");
-                            item.textContent = source.source || "Dokumen";
-                            sourceEl.appendChild(item);
-                        });
+                //         sources.slice(0, 3).forEach(source => {
+                //             const item = document.createElement("div");
+                //             item.textContent = source.source || "Dokumen";
+                //             sourceEl.appendChild(item);
+                //         });
 
-                        bot.appendChild(sourceEl);
-                    }
-                }
+                //         bot.appendChild(sourceEl);
+                //     }
+                // }
             }
         }
     } catch (error) {
