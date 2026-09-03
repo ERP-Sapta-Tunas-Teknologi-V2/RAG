@@ -54,7 +54,7 @@ create or replace function public.hybrid_search(
     match_count int default 10,
     full_text_weight float default 1,
     semantic_weight float default 1,
-    rrf_k int default 50
+    rrf_k int default 10
 )
 returns table (
     id bigint,

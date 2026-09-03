@@ -401,7 +401,6 @@ Parameter retrieval merupakan konfigurasi internal backend dan tidak perlu dikir
 | Candidate documents |    10 |
 | Reranked documents  |     3 |
 | RRF k               |    50 |
-| Rerank threshold    |   5.0 |
 
 ## API Contract Summary
 

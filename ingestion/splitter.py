@@ -221,7 +221,7 @@ class StructureAwareChunker:
     def _make_chunk(self, blocks, heading):
         content = "\n\n".join(block["text"] for block in blocks)
         content = self._scan_injection(content)
-        print(content)
+        content = f"{content}\n\nSapta Tunas Teknologi (STT)"
 
         if heading:
             content = f"{heading}\n\n{content}"
