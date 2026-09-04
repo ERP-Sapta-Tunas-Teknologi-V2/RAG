@@ -20,9 +20,15 @@ API Retrieval-Augmented Generation (RAG) untuk melakukan pencarian dokumen dan m
 * [Retrieval](#retrieval)
 * [Session Management](#session-management)
 * [Logging](#logging)
+* [CORS](#cors)
+* [Rate Limiting](#rate-limiting)
+* [Log Export](#log-export)
+* [Analytics Endpoints](#analytics-endpoints)
 * [Deployment](#deployment)
 * [Production Checklist](#production-checklist)
+* [Performance](#performance)
 * [Dokumentasi](#dokumentasi)
+* [Project Flow](#project-flow)
 
 ---
 
@@ -801,6 +807,58 @@ Contoh:
 ```
 
 Export menggunakan CSV UTF-8 BOM.
+
+---
+
+## Analytics Endpoints
+
+Selain log export, tersedia endpoint analytics tambahan untuk kebutuhan reporting.
+
+Akses dibatasi untuk role:
+
+```text
+Marketing
+Product
+```
+
+### Top FAQ
+
+```http
+GET /api/logs/top-faq?days=30&limit=5
+```
+
+Mengembalikan daftar pertanyaan yang paling sering diajukan dalam rentang hari tertentu.
+
+| Parameter | Default | Description                          |
+| --------- | ------: | ------------------------------------- |
+| `days`    |      30 | Rentang hari ke belakang yang dihitung |
+| `limit`   |       5 | Jumlah maksimum FAQ yang dikembalikan |
+
+### Cost — Daily
+
+```http
+GET /api/cost/daily?date=YYYY-MM-DD
+```
+
+Mengembalikan laporan biaya (LLM/embedding) untuk satu hari tertentu. Jika `date` tidak dikirim, menggunakan tanggal berjalan.
+
+### Cost — Weekly
+
+```http
+GET /api/cost/weekly?date=YYYY-MM-DD
+```
+
+Mengembalikan laporan biaya mingguan hingga tanggal `date` (default: hari ini).
+
+### Cost — Budget
+
+```http
+GET /api/cost/budget
+```
+
+Mengembalikan status penggunaan budget saat ini terhadap limit yang ditentukan.
+
+Detail lengkap request/response setiap endpoint di atas tersedia pada [`api-contract.md`](docs/api-contract.md).
 
 ---
 

@@ -420,6 +420,20 @@ Parameter retrieval merupakan konfigurasi internal backend dan tidak perlu dikir
 | Fallback field        | `fallback`           |
 | Max query length      | 1000 characters      |
 
+## Daftar Seluruh Endpoint
+
+| Endpoint               | Method | Akses           |
+| ----------------------- | ------ | --------------- |
+| `/api/chat`             | POST   | Public          |
+| `/api/admin/ingest`     | POST   | Admin           |
+| `/api/admin/sync`       | POST   | Admin           |
+| `/api/logs/export`      | GET    | Marketing, Product |
+| `/api/logs/top-faq`     | GET    | Marketing, Product |
+| `/api/cost/daily`       | GET    | Marketing, Product |
+| `/api/cost/weekly`      | GET    | Marketing, Product |
+| `/api/cost/budget`      | GET    | Marketing, Product |
+| `/`                     | GET    | Public          |
+
 ## POST /api/admin/ingest
 
 Endpoint untuk melakukan indexing dokumen yang sudah tersimpan di sistem.
@@ -557,6 +571,237 @@ Proses berjalan secara asynchronous (background thread). Endpoint langsung menge
   "error": "category must be one of ['berita', 'stt']"
 }
 ```
+
+`401 Unauthorized` — role tidak dikirim:
+
+```json
+{
+  "error": "authentication required"
+}
+```
+
+`403 Forbidden` — role tidak memiliki akses:
+
+```json
+{
+  "error": "forbidden"
+}
+```
+
+---
+
+## GET /api/logs/export
+
+Endpoint untuk mengekspor query log dalam format CSV.
+
+### Akses
+
+Dibatasi untuk role:
+
+```text
+Marketing
+Product
+```
+
+### Request
+
+```http
+GET /api/logs/export?start=YYYY-MM-DD&end=YYYY-MM-DD
+```
+
+| Parameter | Type   | Required | Description                                   |
+| --------- | ------ | -------- | ---------------------------------------------- |
+| `start`   | string | No       | Tanggal awal filter (format `YYYY-MM-DD`)      |
+| `end`     | string | No       | Tanggal akhir filter (format `YYYY-MM-DD`, inklusif) |
+
+### Response
+
+`200 OK`
+
+```text
+Content-Type: text/csv; charset=utf-8
+Content-Disposition: attachment; filename=query_logs.csv
+```
+
+Body berupa data CSV query log (UTF-8 dengan BOM).
+
+### Error Response
+
+`400 Bad Request`:
+
+```json
+{
+  "error": "date must use YYYY-MM-DD format"
+}
+```
+
+```json
+{
+  "error": "start must not be after end"
+}
+```
+
+---
+
+## GET /api/logs/top-faq
+
+Endpoint untuk mendapatkan pertanyaan yang paling sering diajukan (top FAQ).
+
+### Akses
+
+Dibatasi untuk role:
+
+```text
+Marketing
+Product
+```
+
+### Request
+
+```http
+GET /api/logs/top-faq?days=30&limit=5
+```
+
+| Parameter | Type    | Required | Default | Description                          |
+| --------- | ------- | -------- | ------- | ------------------------------------- |
+| `days`    | integer | No       | 30      | Rentang hari ke belakang yang dihitung |
+| `limit`   | integer | No       | 5       | Jumlah maksimum FAQ yang dikembalikan |
+
+### Response
+
+`200 OK`
+
+```json
+[
+  {
+    "question": "...",
+    "count": 0
+  }
+]
+```
+
+Jika tidak ada data, mengembalikan array kosong `[]`.
+
+---
+
+## GET /api/cost/daily
+
+Endpoint untuk mendapatkan laporan biaya (cost) harian.
+
+### Akses
+
+Dibatasi untuk role:
+
+```text
+Marketing
+Product
+```
+
+### Request
+
+```http
+GET /api/cost/daily?date=YYYY-MM-DD
+```
+
+| Parameter | Type   | Required | Description                                    |
+| --------- | ------ | -------- | ----------------------------------------------- |
+| `date`    | string | No       | Tanggal laporan. Default: hari ini (server-side) |
+
+### Response
+
+`200 OK`
+
+```json
+{
+  "report_date": "...",
+  "total_cost": 0
+}
+```
+
+Jika tidak ada data untuk tanggal tersebut, mengembalikan object kosong `{}`.
+
+---
+
+## GET /api/cost/weekly
+
+Endpoint untuk mendapatkan laporan biaya (cost) mingguan.
+
+### Akses
+
+Dibatasi untuk role:
+
+```text
+Marketing
+Product
+```
+
+### Request
+
+```http
+GET /api/cost/weekly?date=YYYY-MM-DD
+```
+
+| Parameter | Type   | Required | Description                                                  |
+| --------- | ------ | -------- | -------------------------------------------------------------- |
+| `date`    | string | No       | Tanggal akhir periode mingguan. Default: hari ini (server-side) |
+
+### Response
+
+`200 OK`
+
+```json
+{
+  "data": [
+    {
+      "report_date": "...",
+      "total_cost": 0
+    }
+  ]
+}
+```
+
+Jika tidak ada data, `data` berupa array kosong `[]`.
+
+---
+
+## GET /api/cost/budget
+
+Endpoint untuk memeriksa status penggunaan budget saat ini.
+
+### Akses
+
+Dibatasi untuk role:
+
+```text
+Marketing
+Product
+```
+
+### Request
+
+```http
+GET /api/cost/budget
+```
+
+Tidak ada parameter.
+
+### Response
+
+`200 OK`
+
+```json
+{
+  "...": "..."
+}
+```
+
+Struktur response bergantung pada implementasi `check_budget()`.
+
+---
+
+## Analytics Endpoints — Error Response (Umum)
+
+Berlaku untuk seluruh endpoint `/api/logs/*` dan `/api/cost/*`:
 
 `401 Unauthorized` — role tidak dikirim:
 
