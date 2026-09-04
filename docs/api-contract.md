@@ -420,6 +420,162 @@ Parameter retrieval merupakan konfigurasi internal backend dan tidak perlu dikir
 | Fallback field        | `fallback`           |
 | Max query length      | 1000 characters      |
 
+## POST /api/admin/ingest
+
+Endpoint untuk melakukan indexing dokumen yang sudah tersimpan di sistem.
+
+### Akses
+
+Dibatasi untuk role:
+
+```text
+Admin
+```
+
+### Request
+
+```http
+POST /api/admin/ingest
+Content-Type: application/json
+```
+
+Body:
+
+```json
+{
+  "path": "path/to/file.docx"
+}
+```
+
+| Parameter | Type   | Required | Description                         |
+| --------- | ------ | -------- | ------------------------------------ |
+| `path`    | string | Yes      | Path file dokumen yang akan di-index |
+
+Format file yang didukung:
+
+```text
+.docx
+.pdf
+```
+
+### Response
+
+Proses berjalan secara asynchronous (background thread).
+
+`202 Accepted`:
+
+```json
+{
+  "message": "ingest started",
+  "file": "file.docx"
+}
+```
+
+### Error Response
+
+`400 Bad Request` — path tidak dikirim atau ekstensi tidak didukung:
+
+```json
+{
+  "error": "path is required"
+}
+```
+
+```json
+{
+  "error": "unsupported file type: .jpg"
+}
+```
+
+`404 Not Found` — file tidak ditemukan di path yang diberikan:
+
+```json
+{
+  "error": "file not found"
+}
+```
+
+`401` / `403` — sama seperti `/api/admin/sync`.
+
+---
+
+## POST /api/admin/sync
+
+Endpoint untuk menjalankan sinkronisasi dokumen berdasarkan kategori secara manual/on-demand.
+
+### Akses
+
+Dibatasi untuk role:
+
+```text
+Admin
+```
+
+Role dikirim melalui header:
+
+```http
+X-User-Role: Admin
+```
+
+### Request
+
+```http
+POST /api/admin/sync
+Content-Type: application/json
+```
+
+Body:
+
+```json
+{
+  "category": "stt"
+}
+```
+
+| Parameter  | Type   | Required | Description                                                              |
+| ---------- | ------ | -------- | ------------------------------------------------------------------------ |
+| `category` | string | Yes      | Nama folder di root project (berisi dokumen sumber); `berita` atau `stt` |
+
+### Response
+
+Proses berjalan secara asynchronous (background thread). Endpoint langsung mengembalikan response tanpa menunggu proses selesai.
+
+`202 Accepted`:
+
+```json
+{
+  "message": "sync started for category 'berita'"
+}
+```
+
+### Error Response
+
+`400 Bad Request` — category tidak valid:
+
+```json
+{
+  "error": "category must be one of ['berita', 'stt']"
+}
+```
+
+`401 Unauthorized` — role tidak dikirim:
+
+```json
+{
+  "error": "authentication required"
+}
+```
+
+`403 Forbidden` — role tidak memiliki akses:
+
+```json
+{
+  "error": "forbidden"
+}
+```
+
+---
+
 ## Performance Logging
 
 Retrieval mencatat:

@@ -13,6 +13,7 @@ API Retrieval-Augmented Generation (RAG) untuk melakukan pencarian dokumen dan m
 * [Instalasi](#instalasi)
 * [Indexing Dokumen](#indexing-dokumen)
 * [Sinkronisasi Dokumen](#sinkronisasi-dokumen)
+* [Admin Endpoints](#admin-endpoints)
 * [Scheduler](#scheduler)
 * [Menjalankan API](#menjalankan-api)
 * [Testing](#testing)
@@ -155,7 +156,8 @@ ollama list
 │   └── vectorstore.py
 ├── routes/
 │   ├── chat.py
-│   └── analytics.py
+│   ├── analytics.py
+│   └── admin.py
 ├── sync/
 │   ├── export_logs.py
 │   ├── retention.py
@@ -405,6 +407,87 @@ New: 2 | Existing: 15 | Deleted: 1
 Untuk dokumen `New` dan `Existing`, proses indexing dijalankan kembali.
 
 Untuk dokumen yang sudah tidak terdapat pada source, seluruh embedding berdasarkan `document_id` dihapus.
+
+---
+
+## Admin Endpoints
+
+Selain dijalankan manual via script, sync dan ingest juga tersedia sebagai endpoint API untuk kebutuhan operasional.
+
+Akses dibatasi untuk role:
+
+```text
+Admin
+```
+
+Format yang didukung:
+
+```text
+.docx
+.pdf
+```
+
+### Ingest Endpoint
+
+Digunakan setelah dokumen sudah tersimpan di sistem (misal via proses upload terpisah).
+
+```http
+POST /api/admin/ingest
+Content-Type: application/json
+```
+
+Body:
+
+```json
+{
+  "path": "path/to/file.docx"
+}
+```
+
+Proses indexing dijalankan secara asynchronous (background thread). Response:
+
+```json
+{
+  "message": "ingest started",
+  "file": "file.docx"
+}
+```
+
+Status code: `202 Accepted`.
+
+### Sync Endpoint
+
+```http
+POST /api/admin/sync
+Content-Type: application/json
+```
+
+Body:
+
+```json
+{
+  "category": "stt"
+}
+```
+
+`category` merupakan nama folder di root project yang berisi dokumen sumber, dan harus salah satu dari:
+
+```text
+berita
+stt
+```
+
+Proses sync dijalankan secara asynchronous (background thread). Response:
+
+```json
+{
+  "message": "sync started for category 'stt'"
+}
+```
+
+Status code: `202 Accepted`.
+
+Progress dan hasil proses tidak dikembalikan melalui endpoint ini; gunakan log aplikasi untuk memantau status.
 
 ---
 
