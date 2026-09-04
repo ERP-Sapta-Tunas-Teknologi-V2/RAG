@@ -6,3 +6,6 @@
 /stt
 /files
 /label
+.venv/
+__pycache__/
+log/
