@@ -1,3 +1,4 @@
+import os
 from flask import Flask, send_from_directory, jsonify
 from flask_cors import CORS
 
@@ -6,7 +7,11 @@ from routes.chat import chat_bp
 from routes.analytics import analytics_bp
 from routes.admin import admin_bp
 
-ALLOWED_ORIGINS = ["https://saptatunas.com"]
+ALLOWED_ORIGINS_ENV = os.getenv("ALLOWED_ORIGINS")
+if ALLOWED_ORIGINS_ENV:
+    ALLOWED_ORIGINS = [o.strip() for o in ALLOWED_ORIGINS_ENV.split(",") if o.strip()]
+else:
+    ALLOWED_ORIGINS = "*"
 
 def create_app():
     app = Flask(__name__)
@@ -16,6 +21,10 @@ def create_app():
     app.register_blueprint(chat_bp, url_prefix="/api")
     app.register_blueprint(analytics_bp, url_prefix="/api")
     app.register_blueprint(admin_bp, url_prefix="/api/admin")
+
+    @app.route("/health")
+    def health():
+        return jsonify({"status": "healthy"}), 200
 
     @app.route("/")
     def index():

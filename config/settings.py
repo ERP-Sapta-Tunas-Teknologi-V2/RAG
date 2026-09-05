@@ -3,21 +3,32 @@ from dotenv import load_dotenv
 
 load_dotenv(override=True)
 
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-SUPABASE_SECRET_KEY = os.getenv("SUPABASE_SECRET_KEY")
+def get_env(key, default=None):
+    val = os.getenv(key)
+    if val is None:
+        for k, v in os.environ.items():
+            if k.strip() == key:
+                val = v
+                break
+    if isinstance(val, str):
+        return val.strip()
+    return default
 
-OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL")
-OLLAMA_LLM = os.getenv("OLLAMA_LLM")
-LOCAL_EMB_MODEL = os.getenv("LOCAL_EMB_MODEL")
+SUPABASE_URL = get_env("SUPABASE_URL")
+SUPABASE_KEY = get_env("SUPABASE_KEY")
+SUPABASE_SECRET_KEY = get_env("SUPABASE_SECRET_KEY")
 
-RERANKER_MODEL = os.getenv("RERANKER_MODEL")
+OLLAMA_BASE_URL = get_env("OLLAMA_BASE_URL")
+OLLAMA_LLM = get_env("OLLAMA_LLM")
+LOCAL_EMB_MODEL = get_env("LOCAL_EMB_MODEL")
 
-VOYAGE_KEY = os.getenv("VOYAGE_KEY")
-VOYAGE_EMB_MODEL = os.getenv("VOYAGE_EMB_MODEL")
+RERANKER_MODEL = get_env("RERANKER_MODEL")
 
-ARK_API_KEY = os.getenv("ARK_API_KEY")
-ARK_BASE_URL = os.getenv("ARK_BASE_URL")
-ARK_LLM = os.getenv("ARK_LLM")
+VOYAGE_KEY = get_env("VOYAGE_KEY")
+VOYAGE_EMB_MODEL = get_env("VOYAGE_EMB_MODEL")
 
-SYNTHORAI_API_KEY = os.getenv("SYNTHORAI_API_KEY")
+ARK_API_KEY = get_env("ARK_API_KEY")
+ARK_BASE_URL = get_env("ARK_BASE_URL")
+ARK_LLM = get_env("ARK_LLM")
+
+SYNTHORAI_API_KEY = get_env("SYNTHORAI_API_KEY")

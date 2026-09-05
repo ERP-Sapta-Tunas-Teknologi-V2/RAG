@@ -1,12 +1,17 @@
+# Git
 .git
-.venv
-venv
-__pycache__
-*.pyc
-*.pyo
-*.pyd
+.gitignore
+.gitattributes
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
 .Python
 env/
+venv/
+.venv/
 build/
 develop-eggs/
 dist/
@@ -22,4 +27,19 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+
+# Logs & temporary files
 log/
+*.log
+
+# Sensitive environment variables
+.env
+.env.*
+!.env.example
+
+# Documentation & tests
+docs/
+diagrams/
+tests/
+project_structure.txt
+README.md

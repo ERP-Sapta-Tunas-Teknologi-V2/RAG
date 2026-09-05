@@ -8,7 +8,9 @@ from config.settings import LOCAL_EMB_MODEL
 
 class StructureAwareChunker:
     def __init__(self, max_tokens=1000):
-        self.tokenizer = AutoTokenizer.from_pretrained(f"BAAI/{LOCAL_EMB_MODEL}")
+        hf_model_name = LOCAL_EMB_MODEL.split(":")[0] if LOCAL_EMB_MODEL else "bge-m3"
+        hf_repo = f"BAAI/{hf_model_name}" if "/" not in hf_model_name else hf_model_name
+        self.tokenizer = AutoTokenizer.from_pretrained(hf_repo)
         self.max_tokens = max_tokens
 
     def _scan_injection(self, content):

@@ -1,3 +1,4 @@
+import os
 import re
 import time
 import json
@@ -113,8 +114,12 @@ def chat():
     log_start = time.perf_counter()
     Thread(target=log_query_background, args=(safe_query, anon_id), daemon=True).start()
     log_time = time.perf_counter() - log_start
-    with open("log/log_time.txt", "a", encoding="utf-8") as f:
-        f.write(f"[{request_id}] [LOGGING] total={log_time:.3f}s\n")
+    try:
+        os.makedirs("log", exist_ok=True)
+        with open("log/log_time.txt", "a", encoding="utf-8") as f:
+            f.write(f"[{request_id}] [LOGGING] total={log_time:.3f}s\n")
+    except Exception as e:
+        print(f"[LOG] write warning: {e}")
 
     documents, context, embedding_tokens, embedding_model = hybrid_retrieve(contextual_question, request_id)
     usage["embedding_tokens"] = embedding_tokens
@@ -145,12 +150,13 @@ def chat():
 #     })
 
     def generate():
-        yield f"data: {json.dumps({
+        meta_data = {
             'type': 'metadata',
             'session_id': session_id,
             'sources': sources,
             'fallback': False
-        }, ensure_ascii=False)}\n\n"
+        }
+        yield f"data: {json.dumps(meta_data, ensure_ascii=False)}\n\n"
 
         llm_start = time.perf_counter()
         first_token_time = None
@@ -221,13 +227,18 @@ def chat():
             f"total={total_time:.3f}s\n\n"
         )
 
-        with open("log/log_time.txt", "a", encoding="utf-8") as f:
-            f.write(log)
+        try:
+            os.makedirs("log", exist_ok=True)
+            with open("log/log_time.txt", "a", encoding="utf-8") as f:
+                f.write(log)
+        except Exception as e:
+            print(f"[LOG] write warning: {e}")
 
-        yield f"data: {json.dumps({
+        answer_data = {
             'type': 'answer',
             'content': answer
-        }, ensure_ascii=False)}\n\n"
+        }
+        yield f"data: {json.dumps(answer_data, ensure_ascii=False)}\n\n"
 
         yield 'data: {"type":"done"}\n\n'
 

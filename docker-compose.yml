@@ -4,11 +4,23 @@ services:
     container_name: rag-nginx
     restart: unless-stopped
     ports:
-      - "5000:80"
+      - "${HTTP_PORT:-80}:80"
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
-      - rag-app
+      rag-app:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:80/healthz || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "5"
     networks:
       - rag-network
 
@@ -23,38 +35,33 @@ services:
     env_file:
       - .env
     environment:
+      - PORT=5000
       - PYTHONUNBUFFERED=1
+      - GUNICORN_WORKERS=${GUNICORN_WORKERS:-2}
+      - GUNICORN_THREADS=${GUNICORN_THREADS:-4}
+      - GUNICORN_TIMEOUT=${GUNICORN_TIMEOUT:-120}
     volumes:
       - ./log:/app/log
-    # Memungkinkan container mengakses host (misal Ollama di localhost host machine)
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 30s
+    # Memungkinkan container mengakses service di host machine (seperti Ollama di host)
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5000/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "5"
     networks:
       - rag-network
-
-  # (Opsional) Uncomment jika ingin menjalankan Ollama langsung di dalam Docker
-  ollama:
-    image: ollama/ollama:latest
-    container_name: rag-ollama
-    restart: unless-stopped
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-    networks:
-      - rag-network
-    # Untuk dukungan GPU NVIDIA (jika tersedia):
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: all
-    #           capabilities: [gpu]
 
 networks:
   rag-network:
     driver: bridge
-
-volumes:
-  ollama_data:

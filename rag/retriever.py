@@ -1,6 +1,7 @@
-from langchain_core.documents import Document
+import os
 import time
 import re
+from langchain_core.documents import Document
 
 from rag.embeddings import (
     embeddings, count_embedding_tokens,  # Ollama
@@ -69,8 +70,12 @@ def hybrid_retrieve(
 
     safe_query = anonymize_query(question)
 
-    with open("log/log_retrieval-docs.txt", "w", encoding="utf-8") as f:
-        f.write(f"\n\n=== REQUEST {request_id} ===\nQUESTION: {safe_query}\n")
+    try:
+        os.makedirs("log", exist_ok=True)
+        with open("log/log_retrieval-docs.txt", "w", encoding="utf-8") as f:
+            f.write(f"\n\n=== REQUEST {request_id} ===\nQUESTION: {safe_query}\n")
+    except Exception as e:
+        print(f"[LOG] write warning: {e}")
 
     for row in result.data or []:
         metadata = row.get("metadata") or {}
@@ -116,7 +121,11 @@ def hybrid_retrieve(
         f"relevant={len(documents)} | "
         f"total={total_time:.3f}s\n"
     )
-    with open("log/log_time.txt", "a", encoding="utf-8") as f:
-        f.write(log)
+    try:
+        os.makedirs("log", exist_ok=True)
+        with open("log/log_time.txt", "a", encoding="utf-8") as f:
+            f.write(log)
+    except Exception as e:
+        print(f"[LOG] write warning: {e}")
 
     return documents, context, embedding_tokens, embedding_model
