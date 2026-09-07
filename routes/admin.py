@@ -5,11 +5,10 @@ from flask import Blueprint, request, jsonify
 
 from utils.permissions import require_role
 from ingestion.indexer import index_document
-from sync.sync import sync_documents
+from sync.sync import sync_documents, SUPPORTED_EXTENSIONS
 
 admin_bp = Blueprint("admin", __name__)
 
-ALLOWED_EXTENSIONS = {".docx"}
 ALLOWED_CATEGORIES = {"berita", "stt"}
 
 def sync_background(category):
@@ -47,7 +46,7 @@ def ingest():
 
     path = Path(file_path)
 
-    if path.suffix.lower() not in ALLOWED_EXTENSIONS:
+    if path.suffix.lower() not in SUPPORTED_EXTENSIONS:
         return jsonify({"error": f"unsupported file type: {path.suffix}"}), 400
 
     if not path.is_file():
