@@ -4,10 +4,23 @@ import pymupdf4llm
 import re
 import tempfile
 from pathlib import Path
+import subprocess
 
 def docx_to_pdf(docx_path, pdf_path):
     print("Converting .docx to .pdf")
-    convert(docx_path, pdf_path)
+    output_dir = pdf_path.parent
+    subprocess.run([
+        "libreoffice", "--headless", "--convert-to", "pdf",
+        "--outdir", str(output_dir), str(docx_path)
+    ], check=True)
+    
+    # LibreOffice otomatis kasih nama sesuai nama asli docx, bukan pdf_path yang kita mau
+    generated_pdf = output_dir / f"{docx_path.stem}.pdf"
+    if generated_pdf != pdf_path:
+        generated_pdf.rename(pdf_path)
+# def docx_to_pdf(docx_path, pdf_path):
+#     print("Converting .docx to .pdf")
+#     convert(docx_path, pdf_path)
 
 def pdf_to_md(pdf_path):
     print("Converting .pdf to .md")

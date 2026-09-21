@@ -25,6 +25,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1 \
     libglib2.0-0 \
     ca-certificates \
+    libreoffice \
     && rm -rf /var/lib/apt/lists/*
 
 # Create a non-privileged user and group for security
