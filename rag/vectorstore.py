@@ -1,7 +1,6 @@
 import time
 import voyageai
 
-from config.settings import VOYAGE_EMB_MODEL
 from rag.embeddings import (
     embeddings, count_embedding_tokens,  # Ollama
     # count_embedding_tokens, embed_text_with_usage  # Voyage
@@ -445,12 +444,6 @@ def add_documents(chunks):
                 f"chunk_index={item['chunk_index']} | "
                 f"fingerprint={item['fingerprint']}"
             )
-
-    if total_embedding_tokens > 0:
-        log_index_usage(
-            emb_model=VOYAGE_EMB_MODEL,
-            embedding_tokens=total_embedding_tokens
-        )
 
     return {
         "inserted": inserted,

@@ -151,8 +151,9 @@ ollama list
 │   ├── indexer.py
 │   ├── loader.py
 │   └── splitter.py
-├── insert/
-│   ├── ingest.py
+├── sync/
+│   ├── export_logs.py
+│   ├── retention.py
 │   ├── scheduler.py
 │   └── sync.py
 ├── rag/
@@ -164,10 +165,6 @@ ollama list
 │   ├── chat.py
 │   ├── analytics.py
 │   └── admin.py
-├── sync/
-│   ├── export_logs.py
-│   ├── retention.py
-│   └── scheduler.py
 ├── utils/
 │   ├── anonymizer.py
 │   ├── extensions.py
@@ -181,6 +178,7 @@ ollama list
 ├── .env
 ├── requirements.txt
 ├── supabase.sql
+├── ingest.py
 └── app.py
 ```
 
