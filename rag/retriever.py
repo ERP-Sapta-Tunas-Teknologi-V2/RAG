@@ -9,7 +9,7 @@ from rag.embeddings import (
 from rag.reranker import rerank
 from utils.supabase_client import supabase
 from utils.anonymizer import anonymize_query
-from config.settings import LOCAL_EMB_MODEL, VOYAGE_EMB_MODEL
+from config.settings import LOCAL_EMB_MODEL
 
 # RERANK_THRESHOLD = 3.0
 
