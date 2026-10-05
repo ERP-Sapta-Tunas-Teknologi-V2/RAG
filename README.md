@@ -832,30 +832,6 @@ Mengembalikan daftar pertanyaan yang paling sering diajukan dalam rentang hari t
 | `days`    |      30 | Rentang hari ke belakang yang dihitung |
 | `limit`   |       5 | Jumlah maksimum FAQ yang dikembalikan |
 
-### Cost — Daily
-
-```http
-GET /api/cost/daily?date=YYYY-MM-DD
-```
-
-Mengembalikan laporan biaya (LLM/embedding) untuk satu hari tertentu. Jika `date` tidak dikirim, menggunakan tanggal berjalan.
-
-### Cost — Weekly
-
-```http
-GET /api/cost/weekly?date=YYYY-MM-DD
-```
-
-Mengembalikan laporan biaya mingguan hingga tanggal `date` (default: hari ini).
-
-### Cost — Budget
-
-```http
-GET /api/cost/budget
-```
-
-Mengembalikan status penggunaan budget saat ini terhadap limit yang ditentukan.
-
 Detail lengkap request/response setiap endpoint di atas tersedia pada [`api-contract.md`](docs/api-contract.md).
 
 ---
