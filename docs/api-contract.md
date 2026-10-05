@@ -300,7 +300,6 @@ FE tidak perlu mengetahui:
 - Supabase
 - pgvector
 - embedding model
-- Voyage AI
 - hybrid search
 - reranker
 - RRF

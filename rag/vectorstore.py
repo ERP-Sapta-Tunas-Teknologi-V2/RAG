@@ -1,18 +1,10 @@
 import time
-import voyageai
 
-from rag.embeddings import (
-    embeddings, count_embedding_tokens,  # Ollama
-    # count_embedding_tokens, embed_text_with_usage  # Voyage
-)
+from rag.embeddings import embeddings, count_embedding_tokens
 from utils.supabase_client import supabase
-from utils.logger import log_index_usage
 
-MAX_RPM = 3
-MAX_TPM = 10_000
 TARGET_BATCH_TOKENS = 9_000
 MAX_RETRIES = 3
-USE_VOYAGE = False
 
 def _count_tokens(text):
     return count_embedding_tokens(text)
@@ -46,76 +38,7 @@ def _create_batches(items):
 
     return batches
 
-class VoyageRateLimiter:
-    def __init__(self, max_rpm=MAX_RPM, max_tpm=MAX_TPM):
-        self.max_rpm = max_rpm
-        self.max_tpm = max_tpm
-        self.history = []
-
-    def _cleanup(self):
-        now = time.time()
-
-        self.history = [
-            (timestamp, tokens)
-            for timestamp, tokens in self.history
-            if now - timestamp < 60
-        ]
-
-    def wait(self, tokens):
-        while True:
-            self._cleanup()
-
-            now = time.time()
-            request_count = len(self.history)
-            token_count = sum(
-                tokens for _, tokens in self.history
-            )
-
-            rpm_exceeded = request_count >= self.max_rpm
-            tpm_exceeded = (
-                token_count + tokens > self.max_tpm
-            )
-
-            if not rpm_exceeded and not tpm_exceeded:
-                return
-
-            wait_time = 1
-
-            if self.history:
-                oldest_timestamp = self.history[0][0]
-
-                wait_time = max(
-                    wait_time,
-                    60 - (now - oldest_timestamp)
-                )
-
-            reasons = []
-
-            if rpm_exceeded:
-                reasons.append(
-                    f"RPM {request_count}/{self.max_rpm}"
-                )
-
-            if tpm_exceeded:
-                reasons.append(
-                    f"TPM {token_count:,}+{tokens:,}/"
-                    f"{self.max_tpm:,}"
-                )
-
-            print(
-                f"[RATE LIMIT] {', '.join(reasons)}. "
-                f"Waiting {wait_time:.1f}s..."
-            )
-
-            time.sleep(wait_time)
-
-    def record(self, tokens):
-        self.history.append(
-            (time.time(), tokens)
-        )
-
-
-def _embed_batch(texts, batch_number, rate_limiter):
+def _embed_batch(texts, batch_number):
     token_count = count_embedding_tokens(texts)
 
     print(
@@ -124,51 +47,19 @@ def _embed_batch(texts, batch_number, rate_limiter):
         f"tokens={token_count:,}"
     )
 
-    if USE_VOYAGE and token_count > MAX_TPM:
-        raise ValueError(
-            f"Batch {batch_number} contains "
-            f"{token_count:,} tokens, exceeding "
-            f"MAX_TPM={MAX_TPM:,}."
-        )
-
     for attempt in range(MAX_RETRIES + 1):
         try:
-            if USE_VOYAGE:
-                rate_limiter.wait(token_count)
-
             print(
-                f"Sending batch {batch_number} "
-                f"to {'Voyage' if USE_VOYAGE else 'Ollama'}..."
+                f"Sending batch {batch_number} to Ollama..."
             )
 
-            vectors = embeddings.embed_documents(texts)  # Ollama
-            # vectors = embed_text_with_usage(texts)  # Voyage
-
-            if USE_VOYAGE:
-                rate_limiter.record(token_count)
+            vectors = embeddings.embed_documents(texts)
 
             print(
                 f"Batch {batch_number} completed."
             )
 
             return vectors, token_count
-
-        except voyageai.error.RateLimitError as e:
-            if attempt == MAX_RETRIES:
-                print(
-                    f"Rate limit: batch "
-                    f"{batch_number} failed: {e}"
-                )
-                return None, 0
-
-            wait_time = 60
-
-            print(
-                f"Rate limit. "
-                f"Retrying in {wait_time}s..."
-            )
-
-            time.sleep(wait_time)
 
         except (TimeoutError, ConnectionError) as e:
             if attempt == MAX_RETRIES:
@@ -285,11 +176,6 @@ def add_documents(chunks):
         f"{TARGET_BATCH_TOKENS:,}"
     )
 
-    rate_limiter = VoyageRateLimiter(
-        max_rpm=MAX_RPM,
-        max_tpm=MAX_TPM
-    )
-
     for batch_number, batch in enumerate(
         batches,
         start=1
@@ -301,8 +187,7 @@ def add_documents(chunks):
 
         vectors, batch_tokens = _embed_batch(
             texts,
-            batch_number,
-            rate_limiter
+            batch_number
         )
 
         if vectors is None:
