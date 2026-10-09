@@ -39,7 +39,7 @@ API Retrieval-Augmented Generation (RAG) untuk melakukan pencarian dokumen dan m
 * Vector database: pgvector
 * RAG framework: LangChain
 * LLM runtime: Ollama
-* LLM: Qwen2.5
+* LLM: Qwen3.5
 * Embedding: BGE-M3
 * Document processing: Docling
 * Response: Server-Sent Events (SSE)
@@ -77,7 +77,7 @@ Hybrid Search
    ↓
 Relevant Documents
    ↓
-Qwen2.5
+Qwen3.5
    ↓
 SSE
    ↓
@@ -97,7 +97,7 @@ Standalone Question
    ↓
 Retrieval
    ↓
-Qwen2.5
+Qwen3.5
    ↓
 SSE
 ```
@@ -112,7 +112,7 @@ Minimal:
 Python 3.x
 Supabase
 Ollama
-Qwen2.5
+Qwen3.5
 BGE-M3
 ```
 
@@ -121,14 +121,14 @@ Instal Ollama mengikuti dokumentasi resmi [Ollama Quickstart](https://docs.ollam
 Model yang digunakan:
 
 ```text
-qwen2.5
+qwen3.5:9b
 bge-m3
 ```
 
 Pull model:
 
 ```bash
-ollama pull qwen2.5
+ollama pull qwen3.5:9b
 ollama pull bge-m3
 ```
 
@@ -241,7 +241,7 @@ SUPABASE_KEY=PUBLISHABLE-KEY
 SUPABASE_SECRET_KEY=SECRET-KEY
 
 OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_LLM=qwen2.5
+OLLAMA_LLM=qwen3.5:9b
 LOCAL_EMB_MODEL=bge-m3
 ```
 
@@ -540,7 +540,7 @@ Pastikan:
 .env
 Supabase
 Ollama
-Qwen2.5
+Qwen3.5
 BGE-M3
 ```
 
@@ -856,7 +856,7 @@ Flask
 RAG
    ├── Supabase
    ├── BGE-M3 (Ollama)
-   └── Qwen2.5 (Ollama)
+   └── Qwen3.5 (Ollama)
 ```
 
 Jangan menggunakan Flask development server (`flask run` / `app.run(debug=True)`) untuk production.
@@ -872,7 +872,7 @@ sudo apt install -y python3 python3-venv python3-pip nginx git
 
 ```bash
 curl -fsSL https://ollama.com/install.sh | sh
-ollama pull qwen2.5
+ollama pull qwen3.5:9b
 ollama pull bge-m3
 ollama list
 ```
@@ -1116,7 +1116,7 @@ Dokumentasi detail tersedia di directory [`docs/`](docs):
                  Hybrid Search
                        │
                        ▼
-                   Qwen2.5
+                   Qwen3.5
                        │
                        ▼
                       SSE
