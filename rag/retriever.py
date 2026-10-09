@@ -3,10 +3,7 @@ import time
 import re
 from langchain_core.documents import Document
 
-from rag.embeddings import (
-    embeddings, count_embedding_tokens,  # Ollama
-    # get_embedding_tokens, embed_query_with_usage, client  # Voyage
-)
+from rag.embeddings import embeddings, count_embedding_tokens
 from rag.reranker import rerank
 from utils.supabase_client import supabase
 from utils.anonymizer import anonymize_query
@@ -40,19 +37,12 @@ def hybrid_retrieve(
     start = time.perf_counter()
     embedding_start = time.perf_counter()
 
-    # expanded_question = question
     expanded_question = expand_query(question)
     print(expanded_question)
 
-    # Ollama
     embedding_model = LOCAL_EMB_MODEL
     embedding_tokens = count_embedding_tokens(question)
     query_embedding = embeddings.embed_query(question)
-
-    # Voyage
-    # embedding_model = VOYAGE_EMB_MODEL
-    # query_embedding = embed_query_with_usage(question)
-    # embedding_tokens = get_embedding_tokens()
 
     embedding_time = time.perf_counter() - embedding_start
     search_start = time.perf_counter()

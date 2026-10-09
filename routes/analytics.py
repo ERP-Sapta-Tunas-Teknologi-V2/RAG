@@ -5,7 +5,6 @@ from zoneinfo import ZoneInfo
 from sync.export_logs import export_query_logs
 from utils.permissions import require_role
 from utils.supabase_admin import supabase
-from utils.budget_monitor import check_budget
 
 analytics_bp = Blueprint("analytics", __name__)
 
@@ -64,43 +63,3 @@ def top_faq():
     ).execute()
 
     return jsonify(result.data or [])
-
-@analytics_bp.route("/cost/daily", methods=["GET"])
-@require_role("Marketing", "Product")
-def daily_cost():
-    report_date = request.args.get("date")
-    params = {}
-
-    if report_date:
-        params["report_date"] = report_date
-
-    result = (
-        supabase
-        .rpc("get_daily_cost_report", params)
-        .execute()
-    )
-
-    data = result.data[0] if result.data else {}
-    return jsonify(data)
-
-@analytics_bp.route("/cost/weekly", methods=["GET"])
-@require_role("Marketing", "Product")
-def weekly_cost():
-    end_date = request.args.get("date")
-    params = {}
-
-    if end_date:
-        params["end_date"] = end_date
-
-    result = (
-        supabase
-        .rpc("get_weekly_cost_report", params)
-        .execute()
-    )
-
-    return jsonify({"data": result.data or []})
-
-@analytics_bp.route("/cost/budget", methods=["GET"])
-@require_role("Marketing", "Product")
-def cost_budget():
-    return jsonify(check_budget())

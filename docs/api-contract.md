@@ -300,7 +300,6 @@ FE tidak perlu mengetahui:
 - Supabase
 - pgvector
 - embedding model
-- Voyage AI
 - hybrid search
 - reranker
 - RRF
@@ -429,9 +428,6 @@ Parameter retrieval merupakan konfigurasi internal backend dan tidak perlu dikir
 | `/api/admin/sync`       | POST   | Admin           |
 | `/api/logs/export`      | GET    | Marketing, Product |
 | `/api/logs/top-faq`     | GET    | Marketing, Product |
-| `/api/cost/daily`       | GET    | Marketing, Product |
-| `/api/cost/weekly`      | GET    | Marketing, Product |
-| `/api/cost/budget`      | GET    | Marketing, Product |
 | `/`                     | GET    | Public          |
 
 ## POST /api/admin/ingest
@@ -684,124 +680,9 @@ Jika tidak ada data, mengembalikan array kosong `[]`.
 
 ---
 
-## GET /api/cost/daily
-
-Endpoint untuk mendapatkan laporan biaya (cost) harian.
-
-### Akses
-
-Dibatasi untuk role:
-
-```text
-Marketing
-Product
-```
-
-### Request
-
-```http
-GET /api/cost/daily?date=YYYY-MM-DD
-```
-
-| Parameter | Type   | Required | Description                                    |
-| --------- | ------ | -------- | ----------------------------------------------- |
-| `date`    | string | No       | Tanggal laporan. Default: hari ini (server-side) |
-
-### Response
-
-`200 OK`
-
-```json
-{
-  "report_date": "...",
-  "total_cost": 0
-}
-```
-
-Jika tidak ada data untuk tanggal tersebut, mengembalikan object kosong `{}`.
-
----
-
-## GET /api/cost/weekly
-
-Endpoint untuk mendapatkan laporan biaya (cost) mingguan.
-
-### Akses
-
-Dibatasi untuk role:
-
-```text
-Marketing
-Product
-```
-
-### Request
-
-```http
-GET /api/cost/weekly?date=YYYY-MM-DD
-```
-
-| Parameter | Type   | Required | Description                                                  |
-| --------- | ------ | -------- | -------------------------------------------------------------- |
-| `date`    | string | No       | Tanggal akhir periode mingguan. Default: hari ini (server-side) |
-
-### Response
-
-`200 OK`
-
-```json
-{
-  "data": [
-    {
-      "report_date": "...",
-      "total_cost": 0
-    }
-  ]
-}
-```
-
-Jika tidak ada data, `data` berupa array kosong `[]`.
-
----
-
-## GET /api/cost/budget
-
-Endpoint untuk memeriksa status penggunaan budget saat ini.
-
-### Akses
-
-Dibatasi untuk role:
-
-```text
-Marketing
-Product
-```
-
-### Request
-
-```http
-GET /api/cost/budget
-```
-
-Tidak ada parameter.
-
-### Response
-
-`200 OK`
-
-```json
-{
-  "...": "..."
-}
-```
-
-Struktur response bergantung pada implementasi `check_budget()`.
-
----
-
 ## Analytics Endpoints — Error Response (Umum)
 
-Berlaku untuk seluruh endpoint `/api/logs/*` dan `/api/cost/*`:
+Berlaku untuk seluruh endpoint `/api/logs/*`:
 
 `401 Unauthorized` — role tidak dikirim:
 

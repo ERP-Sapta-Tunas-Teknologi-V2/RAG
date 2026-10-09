@@ -1,4 +1,4 @@
-# Data Retention Policy — Session, Query & Usage Logs
+# Data Retention Policy — Session, Query Logs
 
 ## 1. Objective
 
@@ -6,11 +6,8 @@ Kebijakan ini mengatur periode penyimpanan, penggunaan, akses, dan penghapusan d
 
 * Session data.
 * Query logs.
-* Chat usage logs.
-* Index usage logs.
-* Budget alerts.
 
-Tujuan kebijakan ini adalah memastikan data hanya disimpan selama diperlukan untuk kebutuhan operasional, analytics, monitoring, cost management, audit, dan compliance.
+Tujuan kebijakan ini adalah memastikan data hanya disimpan selama diperlukan untuk kebutuhan operasional, analytics, monitoring, audit, dan compliance.
 
 ---
 
@@ -20,9 +17,6 @@ Tujuan kebijakan ini adalah memastikan data hanya disimpan selama diperlukan unt
 | ---------------- | ------------------------- | -------------------------------------------------------- | -------------------------: |
 | Session          | Session store             | session ID, conversation history, timestamps             |               Maks. 24 jam |
 | Query logs       | `public.query_logs`       | anonymized query, anon ID, timestamp                     |                    30 hari |
-| Chat usage logs  | `public.chat_usage_logs`  | request ID, anon ID, token usage, model, cost, timestamp |                    90 hari |
-| Index usage logs | `public.index_usage_logs` | embedding model, token usage, cost, timestamp            |                    90 hari |
-| Budget alerts    | `public.budget_alerts`    | period, alert type, cost, budget, usage percentage       |                    90 hari |
 | Application logs | File/application logging  | technical logs dan performance metrics                   | Sesuai log rotation policy |
 
 Retention dihitung berdasarkan timestamp data dan menggunakan waktu UTC pada database.
@@ -145,97 +139,7 @@ Mekanisme anonymization harus direview secara berkala karena pattern-based anony
 
 ---
 
-# 6. Chat Usage Log Retention
-
-## 6.1 Stored Data
-
-`public.chat_usage_logs` menyimpan informasi penggunaan resource chatbot, antara lain:
-
-* `request_id`
-* `anon_id`
-* embedding model
-* embedding token usage
-* embedding cost
-* LLM model
-* LLM input tokens
-* LLM output tokens
-* LLM input cost
-* LLM output cost
-* total tokens
-* total cost
-* `created_at`
-
-Usage log tidak menyimpan isi pertanyaan atau jawaban chatbot.
-
-## 6.2 Retention Period
-
-Chat usage log disimpan selama maksimal:
-
-**90 hari**
-
-Retention ini digunakan untuk mendukung:
-
-* Cost monitoring.
-* Daily/weekly cost reporting.
-* Budget monitoring.
-* Usage analytics.
-* Operational troubleshooting.
-* Audit terhadap penggunaan model dan biaya.
-
-Setelah 90 hari, data harus dihapus secara otomatis.
-
----
-
-# 7. Index Usage Log Retention
-
-## 7.1 Stored Data
-
-`public.index_usage_logs` menyimpan:
-
-* embedding model
-* embedding tokens
-* embedding cost
-* `created_at`
-
-Data digunakan untuk monitoring biaya dan penggunaan embedding pada proses indexing.
-
-## 7.2 Retention Period
-
-Index usage log disimpan selama maksimal:
-
-**90 hari**
-
-Setelah melewati retention period, data harus dihapus secara otomatis.
-
----
-
-# 8. Budget Alert Retention
-
-`public.budget_alerts` digunakan untuk mencatat event monitoring budget, termasuk:
-
-* period type
-* period date
-* alert type
-* cost
-* budget
-* usage percentage
-* created timestamp
-
-Budget alert disimpan selama maksimal:
-
-**90 hari**
-
-Data dapat digunakan untuk:
-
-* Audit budget threshold.
-* Investigasi cost anomaly.
-* Monitoring historical budget status.
-
-Setelah 90 hari, data harus dihapus secara otomatis.
-
----
-
-# 9. Automatic Deletion
+# 6. Automatic Deletion
 
 System harus menyediakan scheduled cleanup job untuk menghapus data yang telah melewati retention period.
 
@@ -244,12 +148,6 @@ Kriteria deletion:
 ```sql
 -- Query logs
 timestamp < now() - interval '30 days'
-
--- Usage logs
-created_at < now() - interval '90 days'
-
--- Budget alerts
-created_at < now() - interval '90 days'
 ```
 
 Contoh SQL:
@@ -257,15 +155,6 @@ Contoh SQL:
 ```sql
 delete from public.query_logs
 where timestamp < now() - interval '30 days';
-
-delete from public.chat_usage_logs
-where created_at < now() - interval '90 days';
-
-delete from public.index_usage_logs
-where created_at < now() - interval '90 days';
-
-delete from public.budget_alerts
-where created_at < now() - interval '90 days';
 ```
 
 Deletion harus dilakukan oleh service account yang memiliki permission yang sesuai.
@@ -274,7 +163,7 @@ Scheduled cleanup harus dijalankan secara berkala, minimal sekali dalam sehari.
 
 ---
 
-# 10. Session Cleanup
+# 7. Session Cleanup
 
 Session cleanup mengikuti expiration policy:
 
@@ -299,7 +188,7 @@ Expired session dan conversation history terkait harus dihapus dari session stor
 
 ---
 
-# 11. Access Control
+# 8. Access Control
 
 Akses terhadap retention data harus mengikuti principle of least privilege.
 
@@ -310,21 +199,15 @@ Akses analytics/export dibatasi kepada role yang memiliki kebutuhan bisnis yang 
 * Marketing
 * Product
 
-### Usage Logs
-
-Usage dan cost data hanya dapat diakses oleh service role dan endpoint analytics yang telah diberi authorization.
-
-Database table harus tidak dapat diakses langsung oleh anonymous atau authenticated client apabila tidak diperlukan.
-
 ### Session Data
 
 Session data hanya boleh diakses oleh application backend dan komponen yang membutuhkan session tersebut.
 
 ---
 
-# 12. Export
+# 9. Export
 
-Data hasil export yang berasal dari query log atau usage log harus mengikuti retention dan access-control policy.
+Data hasil export yang berasal dari query log harus mengikuti retention dan access-control policy.
 
 File export:
 
@@ -337,29 +220,7 @@ Jika export mengandung query user, anonymization policy tetap berlaku.
 
 ---
 
-# 13. Cost Data Integrity
-
-Usage log digunakan sebagai sumber data untuk cost monitoring.
-
-System harus mempertahankan informasi berikut selama retention period:
-
-```text
-request_id
-model
-token usage
-calculated cost
-created_at
-```
-
-Cost calculation harus menggunakan pricing configuration yang sesuai dengan model yang digunakan.
-
-Perubahan pricing configuration tidak boleh mengubah historical usage record yang sudah tersimpan.
-
-Historical usage record harus dianggap immutable setelah berhasil ditulis.
-
----
-
-# 14. Failure Handling
+# 10. Failure Handling
 
 Kegagalan logging tidak boleh menyebabkan request chatbot gagal.
 
@@ -368,7 +229,6 @@ Contoh:
 ```text
 Chat request    → tetap diproses
 Query logging   → asynchronous
-Usage logging   → asynchronous
 Logging failure → dicatat sebagai application error
 ```
 
@@ -376,7 +236,7 @@ Namun, kegagalan scheduled deletion harus dimonitor dan menghasilkan operational
 
 ---
 
-# 15. Audit & Compliance Verification
+# 11. Audit & Compliance Verification
 
 Implementasi retention harus dapat diverifikasi melalui:
 
@@ -394,19 +254,6 @@ Implementasi retention harus dapat diverifikasi melalui:
 * Review access control.
 * Review export authorization.
 
-### Usage Logs
-
-* Test `chat_usage_logs` lebih dari 90 hari terhapus.
-* Test `index_usage_logs` lebih dari 90 hari terhapus.
-* Review cost calculation.
-* Review service-role access.
-
-### Budget Alerts
-
-* Test alert lebih dari 90 hari terhapus.
-* Review access control.
-* Review scheduled cleanup.
-
 ### Scheduled Cleanup
 
 * Review scheduler configuration.
@@ -416,23 +263,20 @@ Implementasi retention harus dapat diverifikasi melalui:
 
 ---
 
-# 16. Retention Summary
+# 12. Retention Summary
 
 ```text
 Session idle timeout      : 30 minutes
 Session absolute timeout  : 24 hours
 
 Query logs                : 30 days
-Chat usage logs           : 90 days
-Index usage logs          : 90 days
-Budget alerts             : 90 days
 ```
 
 Retention period dihitung dari timestamp masing-masing record dan menggunakan UTC sebagai basis waktu database.
 
 ---
 
-# 17. Policy Review
+# 13. Policy Review
 
 Retention policy harus direview apabila terdapat perubahan pada:
 
@@ -444,7 +288,6 @@ Retention policy harus direview apabila terdapat perubahan pada:
 * Session management architecture.
 * Logging architecture.
 * Storage provider.
-* Cost monitoring requirement.
 * Export requirement.
 
 Review juga harus dilakukan apabila terdapat kebutuhan untuk memperpanjang retention period.
@@ -457,10 +300,4 @@ Session:
 
 Query logs:
 30 days
-
-Usage logs:
-90 days
-
-Budget alerts:
-90 days
 ```
